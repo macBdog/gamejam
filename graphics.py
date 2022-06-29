@@ -1,6 +1,5 @@
 import numpy
 from pathlib import Path
-from settings import GameSettings
 from OpenGL.GL import (
     glCreateProgram, glCreateShader,
     glShaderSource,
@@ -15,6 +14,7 @@ from OpenGL.GL.shaders import (
     compileProgram, compileShader
 )
 
+from gamejam.settings import GameSettings
 
 class Graphics:
     SHADER_PATH = "shaders"

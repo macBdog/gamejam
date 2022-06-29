@@ -2,7 +2,8 @@ from OpenGL.GL import *
 import os.path
 from PIL import Image
 import numpy
-from graphics import Graphics
+
+from gamejam.graphics import Graphics
 
 
 class Texture:

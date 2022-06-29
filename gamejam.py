@@ -1,12 +1,5 @@
 import glfw
-from graphics import Graphics
-from input import Input, InputActionKey, InputMethod, InputActionModifier
-from texture import TextureManager
 import time
-from gui import Gui
-from profile import Profile
-from particles import Particles
-from settings import GameSettings
 from OpenGL.GL import (
     glViewport,
     glClear, glClearColor,
@@ -18,6 +11,14 @@ from OpenGL.GL import (
     GL_BLEND, GL_SMOOTH, GL_DEPTH_TEST, GL_LEQUAL,
     GL_TRUE
 )
+
+from gamejam.graphics import Graphics
+from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
+from gamejam.texture import TextureManager
+from gamejam.gui import Gui
+from gamejam.profile import Profile
+from gamejam.particles import Particles
+from gamejam.settings import GameSettings
 
 class GameJam:
     """A generic interactive frame interpolation loop without connection to specific logic."""

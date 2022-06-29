@@ -1,6 +1,6 @@
-from widget import Widget
-from texture import SpriteTexture
-from cursor import Cursor
+from gamejam.widget import Widget
+from gamejam.texture import SpriteTexture
+from gamejam.cursor import Cursor
 
 
 class Gui:

@@ -1,11 +1,11 @@
 import os
 import math
 import numpy as np
-from font import Font
-from gui import Gui
-from input import InputActionKey, InputActionModifier
-from settings import GameSettings
-from gamejam import GameJam
+from gamejam.font import Font
+from gamejam.gui import Gui
+from gamejam.input import InputActionKey, InputActionModifier
+from gamejam.settings import GameSettings
+from gamejam.gamejam import GameJam
 
 class MiniGame(GameJam):
     

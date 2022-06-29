@@ -1,7 +1,8 @@
 import enum
-from animation import Animation
-from texture import SpriteTexture
-from cursor import Cursor
+
+from gamejam.animation import Animation
+from gamejam.texture import SpriteTexture
+from gamejam.cursor import Cursor
 
 class AlignX(enum.Enum):
     Left = 1

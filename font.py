@@ -1,8 +1,6 @@
 import glfw
 import numpy as np
 from freetype import Face, ctypes
-from graphics import Graphics
-from settings import GameSettings
 from OpenGL.GL import (
     glGenBuffers, glBindBuffer, glBufferData,
     glGenTextures, glBindTexture, glActiveTexture,
@@ -26,6 +24,9 @@ from OpenGL.GL import (
     GL_STATIC_DRAW,
     GL_TRIANGLES
 )
+
+from gamejam.graphics import Graphics
+from gamejam.settings import GameSettings
 
 class Font():
     def blit(self, dest, src, loc):
