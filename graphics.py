@@ -1,3 +1,5 @@
+from enum import Enum, auto
+import os
 import numpy
 from pathlib import Path
 from OpenGL.GL import (
@@ -16,41 +18,72 @@ from OpenGL.GL.shaders import (
 
 from gamejam.settings import GameSettings
 
+class Shader(Enum):
+    TEXTURE = 0
+    TEXTURE_ANIM = auto()
+    COLOUR = auto()
+    FONT = auto()
+    PARTICLES = auto()
+
+class ShaderType(Enum):
+    VERTEX = 0
+    PIXEL = auto()
+
 class Graphics:
     SHADER_PATH = "shaders"
+    
 
     def __init__(self):
+        self.shaders = {}
         self.indices = numpy.array([0, 1, 2, 2, 3, 0], dtype=numpy.uint32)
 
         # Pre-compile multiple shaders for general purpose drawing
         self.shader_texture = compileProgram(
-            compileShader(Graphics.load_shader("texture.vert"), GL_VERTEX_SHADER), 
-            compileShader(Graphics.load_shader("texture.frag"), GL_FRAGMENT_SHADER)
+            compileShader(self.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), GL_VERTEX_SHADER), 
+            compileShader(self.builtin_shader(Shader.TEXTURE, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
 
         self.shader_colour = compileProgram(
-            compileShader(Graphics.load_shader("colour.vert"), GL_VERTEX_SHADER), 
-            compileShader(Graphics.load_shader("colour.frag"), GL_FRAGMENT_SHADER)
+            compileShader(self.builtin_shader(Shader.COLOUR, ShaderType.VERTEX), GL_VERTEX_SHADER), 
+            compileShader(self.builtin_shader(Shader.COLOUR, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
 
         self.shader_font = compileProgram(
-            compileShader(Graphics.load_shader("font.vert"), GL_VERTEX_SHADER), 
-            compileShader(Graphics.load_shader("font.frag"), GL_FRAGMENT_SHADER)
+            compileShader(self.builtin_shader(Shader.FONT, ShaderType.VERTEX), GL_VERTEX_SHADER), 
+            compileShader(self.builtin_shader(Shader.FONT, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
 
 
     @staticmethod
-    def compile_shader(vertex_shader_source: str, pixel_shader_source: str):
+    def get_shader_name(shader: Shader, type: ShaderType) -> str:
+        return f"{shader._name_.lower()}.{'vert' if type is ShaderType.VERTEX else 'frag'}"
+
+
+    def builtin_shader(self, shader: Shader, type: ShaderType) -> str:
+        name = Graphics.get_shader_name(shader, type)
+        if name not in self.shaders:
+            path = Path(__file__).parent / Graphics.SHADER_PATH / name
+            with open(path, 'r') as shader_file:
+                self.shaders[name] = shader_file.read()
+        return self.shaders[name]
+
+
+    @staticmethod
+    def create_shader(vertex_shader_source: str, pixel_shader_source: str):
         return compileProgram(
             compileShader(vertex_shader_source, GL_VERTEX_SHADER), 
             compileShader(pixel_shader_source, GL_FRAGMENT_SHADER)
         )
 
+    
     @staticmethod
-    def load_shader(name: str) -> str:
-        path = Path(__file__).parent / Graphics.SHADER_PATH / name
-        with open(path, 'r') as shader_file:
-            return shader_file.read()
+    def load_shader(shader_path: str) -> str:
+        if os.path.exists(shader_path):
+            with open(shader_path, 'r') as shader_file:
+                return shader_file.read()
+        elif GameSettings.DEV_MODE:
+            print(f"Shader load failure, cannot find path: {shader_path}")
+
 
     @staticmethod
     def process_shader_source(src: str, subs: dict) -> str:

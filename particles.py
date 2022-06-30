@@ -1,5 +1,5 @@
 from gamejam.settings import GameSettings
-from gamejam.graphics import Graphics
+from gamejam.graphics import Graphics, Shader, ShaderType
 from gamejam.texture import SpriteTexture, Texture
 
 from OpenGL.GL import (
@@ -25,8 +25,8 @@ class Particles:
         shader_substitutes = {
             "NUM_PARTICLE_EMITTERS": str(Particles.NumEmitters)
         }
-        particle_shader = Graphics.process_shader_source(Graphics.load_shader("particles.frag"), shader_substitutes)
-        self.shader = Graphics.compile_shader(Graphics.load_shader("texture.vert"), particle_shader)
+        particle_shader = Graphics.process_shader_source(graphics.builtin_shader(Shader.PARTICLES, ShaderType.PIXEL), shader_substitutes)
+        self.shader = Graphics.create_shader(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), particle_shader)
         
         self.texture = Texture("")
         self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
