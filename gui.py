@@ -1,7 +1,7 @@
 from gamejam.widget import Widget
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
-
+from gamejam.font import Font
 
 class Gui:
     """Manager style functionality for a collection of widget classes.
@@ -31,11 +31,11 @@ class Gui:
         else:
             print(f"Error when adding child gui {child.name} to {self.name}! Gui {child.name} already has a parent and it's name is {child.parent.name}.")
 
-    def add_widget(self, sprite: SpriteTexture) -> Widget:
+    def add_widget(self, sprite: SpriteTexture, font:Font=None) -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
 
-        widget = Widget(sprite)
+        widget = Widget(sprite, font)
         self.widgets.append(widget)
         return widget
 

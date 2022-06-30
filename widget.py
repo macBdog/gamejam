@@ -3,6 +3,8 @@ import enum
 from gamejam.animation import Animation
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
+from gamejam.font import Font
+
 
 class AlignX(enum.Enum):
     Left = 1
@@ -20,7 +22,7 @@ class Widget:
         Base class can display and animate alpha, width, height. 
         Child classes are expected to handle input and other functionality."""
 
-    def __init__(self, sprite: SpriteTexture):
+    def __init__(self, sprite: SpriteTexture, font:Font=None):
         self.sprite = sprite
         self.alignX = AlignX.Centre
         self.alignY = AlignY.Middle
@@ -35,18 +37,37 @@ class Widget:
         self.actioned = False
         self.alpha_start = self.sprite.colour[3]
         self.alpha_hover = -0.25
+        self.font = font
+        self.text = ""
+        self.text_size = 0
+        self.text_alignX = AlignX.Centre
+        self.text_alignY = AlignY.Middle
+        self.text_pos = [0.0, 0.0]
+        self.text_col = [1.0, 1.0, 1.0, 1.0]
+
 
     def hover_begin_default(self):
         self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
+
     def hover_end_default(self):
         self.sprite.set_alpha(self.alpha_start)
+
+
+    def set_text(self, text: str, size:int, offset=None, align_x=AlignX.Centre, align_y=AlignY.Middle):
+        self.text = text
+        self.text_size = size
+        self.text_alignX = align_x
+        self.text_alignY = align_y
+        self.text_pos = offset
+
 
     def set_colour_func(self, colour_func, colour_arg = None):
         """ Set a function that determines the colour of a button."""
 
         self.colour_func = colour_func
         self.colour_arg = colour_arg
+
 
     def set_action(self, activation_func, activation_arg = None):
         """Set the function to call on activate. Leave the hover functions defaulted."""
@@ -56,6 +77,7 @@ class Widget:
         self.on_hover_begin = self.hover_begin_default
         self.on_hover_end = self.hover_end_default
 
+
     def set_actions(self, activation_func, hover_start_func, hover_end_func, activation_arg):
         """Set the function to call on activate with custom hover start and end functions."""
 
@@ -63,6 +85,7 @@ class Widget:
         self.hover_end = hover_end_func
         self.action = activation_func
         self.action_arg = activation_arg
+
 
     def on_hover_begin(self):
         pass
@@ -73,8 +96,10 @@ class Widget:
     def on_activate(self):
         pass
 
+
     def animate(self, animation: Animation):
         self.animation = animation
+
 
     def align(self, x: AlignX, y: AlignY):
         if x == AlignX.Left:
@@ -89,6 +114,7 @@ class Widget:
             pass
         elif y == AlignY.Bottom:
             self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5)
+
 
     def touch(self, mouse: Cursor):
         """Test for activation and hover states."""
@@ -116,6 +142,7 @@ class Widget:
             if not mouse.buttons[0]:
                 self.actioned = False
 
+
     def draw(self, dt: float):
         """Apply any changes to the widget rect."""
 
@@ -129,4 +156,10 @@ class Widget:
             self.animation.tick(dt)
 
         self.sprite.draw()
+
+        if len(self.text) > 0 and self.font is not None:
+            text_width = 0
+            text_pos = self.sprite.pos
+            self.font.draw(self.text, self.text_size, text_pos, self.text_col)
+
 
