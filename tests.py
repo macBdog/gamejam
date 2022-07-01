@@ -57,11 +57,22 @@ class MiniGame(GameJam):
         super().end()
 
 
-def test_mini_game():
-    jam = MiniGame()
-    jam.prepare()
-    jam.begin()
+class GameJamTests():
+    def test_mini_game():
+        jam = MiniGame()
+        jam.prepare()
+        jam.begin()
+
+        # Wait
+        jam.end()
+        return True
+
+
+    def test_gui_hierachy():
+        return True
 
 
 if __name__ == "__main__":
-    test_mini_game()
+    test_suite = GameJamTests()
+    test_suite.test_mini_game()
+    test_suite.test_gui_hierachy()

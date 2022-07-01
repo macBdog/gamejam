@@ -28,6 +28,7 @@ class GameJam:
         self.running = False
         self.window_width = 1920
         self.window_height = 1080
+        self.window_ratio = self.window_width / self.window_height
         self.dt = 0.03
         self.fps = 0
         self.fps_last_update = 1
