@@ -159,7 +159,10 @@ class Widget:
 
         if len(self.text) > 0 and self.font is not None:
             text_width = 0
-            text_pos = self.sprite.pos
+            text_pos = [
+                self.sprite.pos[0] + self.text_pos[0],
+                self.sprite.pos[1] + self.text_pos[1],
+            ]
             self.font.draw(self.text, self.text_size, text_pos, self.text_col)
 
 
