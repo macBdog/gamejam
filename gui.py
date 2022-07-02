@@ -12,8 +12,8 @@ class Gui:
         self.height = window_height
         self.active_draw = False
         self.active_input = False
-        self.widgets = []
         self.parent = None
+        self.widgets = []
         self.children = {}
 
 
@@ -43,8 +43,8 @@ class Gui:
         return widget
 
 
-    def delete_widget(self, widget_id: int):
-        self.widgets.remove(widget_id)
+    def delete_widget(self, widget: Widget):
+        self.widgets.remove(widget)
 
 
     def touch(self, mouse: Cursor):
