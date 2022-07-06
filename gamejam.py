@@ -33,6 +33,7 @@ class GameJam:
         self.fps = 0
         self.fps_last_update = 1
     
+
     def prepare(self, texture_path: str = "tex"):
         if not glfw.init():
             return
@@ -58,12 +59,14 @@ class GameJam:
         self.particles = Particles(self.graphics, self.window_width / self.window_height)
         self.profile = Profile()
 
-        self.input.add_key_mapping(256, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.end)
+        # Bind escape to quit and prtscn to outputing profile info
+        self.input.add_key_mapping(256, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.quit)
         self.input.add_key_mapping(283, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.profile.capture_next_frame)
 
         def toggle_dev_mode():
             GameSettings.DEV_MODE = not GameSettings.DEV_MODE
 
+        # CtrlD to enable developer mode
         self.input.add_key_mapping(68, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, toggle_dev_mode)
 
         glViewport(0, 0, self.window_width, self.window_height)
@@ -78,6 +81,7 @@ class GameJam:
 
         self.gui = Gui(self.window_width, self.window_height, "gui")
         self.gui.set_active(False, False)
+
 
     def begin(self):
         dt_cur = dt_last = time.time()
@@ -111,9 +115,15 @@ class GameJam:
             glfw.poll_events()
         self.end()
 
+
     def update(self, dt):
         # Child classes define frame specific behaviour here
         pass
+
+
+    def quit(self):
+        self.running = False
+
 
     def end(self):
         self.running = False

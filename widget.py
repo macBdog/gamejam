@@ -35,7 +35,8 @@ class Widget:
         self.colour_func = None
         self.colour_arg = None
         self.actioned = False
-        self.alpha_start = self.sprite.colour[3]
+        if self.sprite is not None:
+            self.alpha_start = self.sprite.colour[3]
         self.alpha_hover = -0.25
         self.font = font
         self.text = ""
@@ -47,11 +48,13 @@ class Widget:
 
 
     def hover_begin_default(self):
-        self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
+        if self.sprite is not None:
+            self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
 
     def hover_end_default(self):
-        self.sprite.set_alpha(self.alpha_start)
+        if self.sprite is not None:
+            self.sprite.set_alpha(self.alpha_start)
 
 
     def set_text(self, text: str, size:int, offset=None, align_x=AlignX.Centre, align_y=AlignY.Middle):
@@ -59,7 +62,12 @@ class Widget:
         self.text_size = size
         self.text_alignX = align_x
         self.text_alignY = align_y
-        self.text_pos = offset
+        if offset is not None:
+            self.text_pos = offset
+
+
+    def set_text_colour(self, colour: list):
+        self.text_col = colour
 
 
     def set_colour_func(self, colour_func, colour_arg = None):
@@ -102,67 +110,73 @@ class Widget:
 
 
     def align(self, x: AlignX, y: AlignY):
-        if x == AlignX.Left:
-            self.sprite.pos = (self.sprite.pos[0] - self.sprite.size[0] * 0.5, self.sprite.pos[1])
-        elif x == AlignX.Centre:
-            pass
-        elif x == AlignX.Right:
-            self.sprite.pos = (self.sprite.pos[0] + self.sprite.size[0] * 0.5, self.sprite.pos[1])
-        if y == AlignY.Top:
-            self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] - self.sprite.size[1] * 0.5)
-        elif y == AlignY.Middle:
-            pass
-        elif y == AlignY.Bottom:
-            self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5)
+        if self.sprite is not None:
+            if x == AlignX.Left:
+                self.sprite.pos = (self.sprite.pos[0] - self.sprite.size[0] * 0.5, self.sprite.pos[1])
+            elif x == AlignX.Centre:
+                pass
+            elif x == AlignX.Right:
+                self.sprite.pos = (self.sprite.pos[0] + self.sprite.size[0] * 0.5, self.sprite.pos[1])
+            if y == AlignY.Top:
+                self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] - self.sprite.size[1] * 0.5)
+            elif y == AlignY.Middle:
+                pass
+            elif y == AlignY.Bottom:
+                self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5)
 
 
     def touch(self, mouse: Cursor):
         """Test for activation and hover states."""
-        if self.action is not None:
-            size_half = [i * 0.5 for i in self.sprite.size]
-            inside = (  mouse.pos[0] >= self.sprite.pos[0] - size_half[0] and
-                        mouse.pos[0] <= self.sprite.pos[0] + size_half[0] and
-                        mouse.pos[1] >= self.sprite.pos[1] - size_half[1] and
-                        mouse.pos[1] <= self.sprite.pos[1] + size_half[1])
-            if self.touched:
-                if not inside:
-                    self.on_hover_end()
-                    self.touched = False
-            else:
-                if inside:
-                    self.on_hover_begin()
-                    self.touched = True
+        if self.sprite is not None:
+            if self.action is not None:
+                size_half = [abs(i * 0.5) for i in self.sprite.size]
+                inside = (  mouse.pos[0] >= self.sprite.pos[0] - size_half[0] and
+                            mouse.pos[0] <= self.sprite.pos[0] + size_half[0] and
+                            mouse.pos[1] >= self.sprite.pos[1] - size_half[1] and
+                            mouse.pos[1] <= self.sprite.pos[1] + size_half[1])
+                if self.touched:
+                    if not inside:
+                        self.on_hover_end()
+                        self.touched = False
+                else:
+                    if inside:
+                        self.on_hover_begin()
+                        self.touched = True
 
-            # Perform the action on mouse up
-            if inside:
-                if mouse.buttons[0]:
-                    if not self.actioned:
-                        self.action(self.action_arg)
-                        self.actioned = True
-            if not mouse.buttons[0]:
-                self.actioned = False
+                # Perform the action on mouse up
+                if inside:
+                    if mouse.buttons[0]:
+                        if not self.actioned:
+                            self.action(self.action_arg)
+                            self.actioned = True
+                if not mouse.buttons[0]:
+                    self.actioned = False
 
 
     def draw(self, dt: float):
         """Apply any changes to the widget rect."""
 
-        # Apply any colour changes
-        if self.colour_func is not None:
-            self.sprite.set_colour(self.colour_func(self.colour_arg))
-
         # Apply any active animation
         if self.animation and self.animation.active:
-            self.sprite.set_alpha(self.animation.val)
             self.animation.tick(dt)
+            
+        if self.sprite is not None:
+            # Apply any colour changes
+            if self.colour_func is not None:
+                self.sprite.set_colour(self.colour_func(self.colour_arg))
 
-        self.sprite.draw()
+            if self.animation is not None:
+                self.sprite.set_alpha(self.animation.val)
+
+            self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            text_width = 0
-            text_pos = [
-                self.sprite.pos[0] + self.text_pos[0],
-                self.sprite.pos[1] + self.text_pos[1],
-            ]
+            text_pos = self.text_pos[:]
+
+            if self.sprite is not None:
+                text_pos[0] += self.sprite.pos[0]
+                text_pos[1] += self.sprite.pos[1]
+                
             self.font.draw(self.text, self.text_size, text_pos, self.text_col)
 
 
