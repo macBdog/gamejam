@@ -95,6 +95,14 @@ class Widget:
         self.action_arg = activation_arg
 
 
+    def set_pos(self, pos: list):
+        # TODO - Hierachy of widgets with a parent position and offsets for sprite and text separately
+        if self.sprite is None:
+            self.text_pos = pos
+        else:
+            self.sprite.pos = pos
+
+
     def on_hover_begin(self):
         pass
 
@@ -112,17 +120,17 @@ class Widget:
     def align(self, x: AlignX, y: AlignY):
         if self.sprite is not None:
             if x == AlignX.Left:
-                self.sprite.pos = (self.sprite.pos[0] - self.sprite.size[0] * 0.5, self.sprite.pos[1])
+                self.sprite.pos = [self.sprite.pos[0] - self.sprite.size[0] * 0.5, self.sprite.pos[1]]
             elif x == AlignX.Centre:
                 pass
             elif x == AlignX.Right:
-                self.sprite.pos = (self.sprite.pos[0] + self.sprite.size[0] * 0.5, self.sprite.pos[1])
+                self.sprite.pos = [self.sprite.pos[0] + self.sprite.size[0] * 0.5, self.sprite.pos[1]]
             if y == AlignY.Top:
-                self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] - self.sprite.size[1] * 0.5)
+                self.sprite.pos = [self.sprite.pos[0], self.sprite.pos[1] - self.sprite.size[1] * 0.5]
             elif y == AlignY.Middle:
                 pass
             elif y == AlignY.Bottom:
-                self.sprite.pos = (self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5)
+                self.sprite.pos = [self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5]
 
 
     def touch(self, mouse: Cursor):

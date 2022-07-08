@@ -99,7 +99,7 @@ class SpriteShape(Sprite):
 
 
 class SpriteTexture(Sprite):
-    def __init__(self, graphics: Graphics, tex: Texture, colour: list, pos: tuple, size: tuple, shader=None):
+    def __init__(self, graphics: Graphics, tex: Texture, colour: list, pos: list, size: list, shader=None):
         Sprite.__init__(self, graphics, colour, pos, size)
         self.texture = tex
 
@@ -170,8 +170,8 @@ class TextureManager:
     def create_sprite_shape(self, colour: list, position: list, size: list, shader=None):
         return SpriteShape(self.graphics, colour, position, size, shader)
 
-    def create_sprite_texture(self, texture_name: str, position: tuple, size: tuple, shader=None):
+    def create_sprite_texture(self, texture_name: str, position: list, size: list, shader=None):
         return SpriteTexture(self.graphics, self.get(texture_name), [1.0, 1.0, 1.0, 1.0], position, size, shader)
 
-    def create_sprite_texture_tinted(self, texture_name: str, colour: list, position: tuple, size: tuple, shader=None):
+    def create_sprite_texture_tinted(self, texture_name: str, colour: list, position: list, size: list, shader=None):
         return SpriteTexture(self.graphics, self.get(texture_name), colour, position, size, shader)
