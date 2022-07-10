@@ -41,6 +41,7 @@ class Input:
         glfw.set_mouse_button_callback(window, self.handle_mouse_button)
         glfw.set_cursor_pos_callback(window, self.handle_cursor_update)
 
+
     def add_key_mapping(self, key: int, action: InputActionKey, modifier: InputActionModifier, func, args=None):
         key_action_pair = (key, action, modifier)
         if key_action_pair in self.key_mapping:
@@ -48,15 +49,21 @@ class Input:
         else:
             self.key_mapping.update({key_action_pair: [func, args]})
 
+
     def add_joystick_mapping(self, button: int, func, args=None):
         pass
+
 
     def add_midi_mapping(self, note: int, func, args=None):
         pass
 
+
     def handle_cursor_update(self, window, xpos, ypos):
         window_size = glfw.get_framebuffer_size(window)
+        xpos = max(0, min(window_size[0], xpos))
+        ypos = max(0, min(window_size[1], ypos))
         self.cursor.pos = [((xpos / window_size[0]) * 2.0) - 1.0, ((ypos / window_size[1]) * -2.0) + 1.0]
+
 
     def handle_mouse_button(self, window, button: int, action: int, mods: int):
         if GameSettings.DEV_MODE:
@@ -67,6 +74,7 @@ class Input:
             self.cursor.buttons[button] = True
         elif action == InputActionKey.ACTION_KEYUP.value:
             self.cursor.buttons[button] = False
+
 
     def handle_input_key(self, window, key: int, scancode: int, action: int, mods: int):
         if GameSettings.DEV_MODE:

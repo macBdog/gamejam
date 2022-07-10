@@ -155,8 +155,11 @@ class Widget:
                 if inside:
                     if mouse.buttons[0]:
                         if not self.actioned:
-                            self.action(self.action_arg)
                             self.actioned = True
+                    elif self.actioned:
+                        self.action(self.action_arg)
+                        self.actioned = False
+
                 if not mouse.buttons[0]:
                     self.actioned = False
 

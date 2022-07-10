@@ -1,5 +1,8 @@
+import os
 import glfw
 import time
+import math
+from pathlib import Path
 from OpenGL.GL import (
     glViewport,
     glClear, glClearColor,
@@ -16,6 +19,7 @@ from gamejam.graphics import Graphics
 from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
 from gamejam.texture import TextureManager
 from gamejam.gui import Gui
+from gamejam.font import Font
 from gamejam.profile import Profile
 from gamejam.particles import Particles
 from gamejam.settings import GameSettings
@@ -43,6 +47,7 @@ class GameJam:
         glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL_TRUE)
         glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
         self.window = glfw.create_window(self.window_width, self.window_height, self.name, None, None)
+        glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
 
         if not self.window:
             glfw.terminate()
@@ -81,6 +86,8 @@ class GameJam:
 
         self.gui = Gui(self.window_width, self.window_height, "gui")
         self.gui.set_active(False, False)
+        font_path = Path(__file__).parent / "res" / "consola.ttf"
+        self.font = Font(str(font_path), self.graphics, self.window)
 
 
     def begin(self):
@@ -103,9 +110,19 @@ class GameJam:
             self.profile.begin("gui")
             self.gui.touch(self.input.cursor)
             self.gui.draw(self.dt)
+            self.input.cursor.draw(self.dt)
             self.profile.end()
 
+            self.profile.begin("game")
             self.update(self.dt)
+            self.profile.end()
+
+            self.profile.begin("dev_stats")
+            if GameSettings.DEV_MODE:
+                cursor_pos = self.input.cursor.pos
+                self.font.draw(f"FPS: {math.floor(self.fps)}", 12, [0.65, 0.75], [0.81, 0.81, 0.81, 1.0])
+                self.font.draw(f"X: {math.floor(cursor_pos[0] * 100) / 100}\nY: {math.floor(cursor_pos[1] * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
+            self.profile.end()
 
             self.profile.begin("particles")
             self.particles.draw(self.dt)

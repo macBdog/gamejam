@@ -4,3 +4,14 @@ class Cursor:
     def __init__(self):
         self.pos = [0.0, 0.0]
         self.buttons = {0: False, 2: False, 3: False, 4: False}
+        self.sprite = None
+
+
+    def set_sprite(self, sprite):
+        self.sprite = sprite
+
+
+    def draw(self, dt: float):
+        if self.sprite is not None:
+            self.sprite.pos = self.pos
+            self.sprite.draw()
