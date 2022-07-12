@@ -3,6 +3,7 @@ from enum import Enum
 
 from gamejam.cursor import Cursor
 from gamejam.settings import GameSettings
+from gamejam.quickmaff import clamp
 
 
 class InputActionKey(Enum):
@@ -60,8 +61,8 @@ class Input:
 
     def handle_cursor_update(self, window, xpos, ypos):
         window_size = glfw.get_framebuffer_size(window)
-        xpos = max(0, min(window_size[0], xpos))
-        ypos = max(0, min(window_size[1], ypos))
+        xpos = clamp(xpos, 0.0, window_size[0])
+        ypos = clamp(ypos, 0.0, window_size[1])
         self.cursor.pos = [((xpos / window_size[0]) * 2.0) - 1.0, ((ypos / window_size[1]) * -2.0) + 1.0]
 
 
