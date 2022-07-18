@@ -6,10 +6,8 @@ from gamejam.font import Font
 class Gui:
     """Manager style functionality for a collection of widget classes.
     Also convenience functions for window handling."""
-    def __init__(self, window_width: int, window_height: int, name: str):
+    def __init__(self, name: str):
         self.name = name
-        self.width = window_width
-        self.height = window_height
         self.active_draw = False
         self.active_input = False
         self.parent = None

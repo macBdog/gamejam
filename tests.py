@@ -72,7 +72,7 @@ class GameJamTests():
         jam = MiniGame()
         jam.prepare()
 
-        gui_splash = Gui(jam.window_width, jam.window_height, "parent")
+        gui_splash = Gui("parent")
         gui_splash.set_active(True, True)
         jam.gui.add_child(gui_splash)
 
