@@ -37,10 +37,12 @@ class Input:
         self.cursor = Cursor()
         self.keys_down = {}
         self.key_mapping = {}
+        self.scroll_mapping = []
 
         glfw.set_key_callback(window, self.handle_input_key)
         glfw.set_mouse_button_callback(window, self.handle_mouse_button)
         glfw.set_cursor_pos_callback(window, self.handle_cursor_update)
+        glfw.set_scroll_callback(window, self.handle_scroll_update)
 
 
     def add_key_mapping(self, key: int, action: InputActionKey, modifier: InputActionModifier, func, args=None):
@@ -49,6 +51,10 @@ class Input:
             self.key_mapping[key_action_pair].extend([func, args])
         else:
             self.key_mapping.update({key_action_pair: [func, args]})
+
+
+    def add_scroll_mapping(self, func, args=None):
+        self.scroll_mapping.append((func, args))
 
 
     def add_joystick_mapping(self, button: int, func, args=None):
@@ -64,6 +70,16 @@ class Input:
         xpos = clamp(xpos, 0.0, window_size[0])
         ypos = clamp(ypos, 0.0, window_size[1])
         self.cursor.pos = [((xpos / window_size[0]) * 2.0) - 1.0, ((ypos / window_size[1]) * -2.0) + 1.0]
+
+
+    def handle_scroll_update(self, window, xpos, ypos):
+        if GameSettings.DEV_MODE:
+            print(f"Scroll event log x[{xpos}], y[{ypos}]")
+
+        for mapping in self.scroll_mapping:
+            func = mapping[0]
+            args = mapping[1]
+            func(args, xpos, ypos)
 
 
     def handle_mouse_button(self, window, button: int, action: int, mods: int):
