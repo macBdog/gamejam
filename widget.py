@@ -31,7 +31,7 @@ class Widget:
         self.hover_begin = None
         self.hover_end = None
         self.action = None
-        self.action_arg = None
+        self.action_kwargs = None
         self.colour_func = None
         self.colour_arg = None
         self.actioned = False
@@ -77,11 +77,11 @@ class Widget:
         self.colour_arg = colour_arg
 
 
-    def set_action(self, activation_func, activation_arg = None):
+    def set_action(self, activation_func, activation_kwargs):
         """Set the function to call on activate. Leave the hover functions defaulted."""
 
         self.action = activation_func
-        self.action_arg = activation_arg
+        self.action_kwargs = activation_kwargs
         self.on_hover_begin = self.hover_begin_default
         self.on_hover_end = self.hover_end_default
 
@@ -92,7 +92,7 @@ class Widget:
         self.hover_begin = hover_start_func
         self.hover_end = hover_end_func
         self.action = activation_func
-        self.action_arg = activation_arg
+        self.action_kwargs = activation_arg
 
 
     def set_pos(self, pos: list):
@@ -157,7 +157,7 @@ class Widget:
                         if not self.actioned:
                             self.actioned = True
                     elif self.actioned:
-                        self.action(self.action_arg)
+                        self.action(**self.action_kwargs)
                         self.actioned = False
 
                 if not mouse.buttons[0]:
