@@ -33,7 +33,7 @@ class Widget:
         self.action = None
         self.action_kwargs = None
         self.colour_func = None
-        self.colour_arg = None
+        self.colour_kwargs = None
         self.actioned = False
         if self.sprite is not None:
             self.alpha_start = self.sprite.colour[3]
@@ -70,16 +70,14 @@ class Widget:
         self.text_col = colour
 
 
-    def set_colour_func(self, colour_func, colour_arg = None):
+    def set_colour_func(self, colour_func, colour_kwargs=None):
         """ Set a function that determines the colour of a button."""
-
         self.colour_func = colour_func
-        self.colour_arg = colour_arg
+        self.colour_kwargs = colour_kwargs
 
 
     def set_action(self, activation_func, activation_kwargs):
         """Set the function to call on activate. Leave the hover functions defaulted."""
-
         self.action = activation_func
         self.action_kwargs = activation_kwargs
         self.on_hover_begin = self.hover_begin_default
@@ -88,7 +86,6 @@ class Widget:
 
     def set_actions(self, activation_func, hover_start_func, hover_end_func, activation_arg):
         """Set the function to call on activate with custom hover start and end functions."""
-
         self.hover_begin = hover_start_func
         self.hover_end = hover_end_func
         self.action = activation_func
@@ -174,7 +171,7 @@ class Widget:
         if self.sprite is not None:
             # Apply any colour changes
             if self.colour_func is not None:
-                self.sprite.set_colour(self.colour_func(self.colour_arg))
+                self.sprite.set_colour(self.colour_func(**self.colour_kwargs))
 
             if self.animation is not None:
                 self.sprite.set_alpha(self.animation.val)

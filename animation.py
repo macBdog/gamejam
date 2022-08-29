@@ -28,13 +28,12 @@ class Animation:
             self.val = 1.0
     
 
-    def set_action(self, time: float, activation_func, **kwargs):
+    def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.
         :param time for the time in the animation to execute, -1 means when complete.
         """
         self.action = activation_func
-        if len(kwargs) > 0:
-            self.action_kwargs = kwargs
+        self.action_kwargs = action_kwargs
         self.action_time = time
 
 
