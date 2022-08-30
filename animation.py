@@ -6,6 +6,7 @@ class AnimType(enum.Enum):
     FadeOut = 2
     Pulse = 3
     InOutSmooth = 4
+    Rotate = 5
 
 class Animation:
     """ Animations store the state and timers for controller
@@ -50,6 +51,8 @@ class Animation:
                 self.val = math.sin(self.timer)
             elif self.type is AnimType.InOutSmooth:
                 self.val = (math.sin(((self.timer / self.time) * math.pi * 2.0) - math.pi * 0.5) + 1.0) * 0.5
+            elif self.type is AnimType.Rotate:
+                self.val += dt * self.time
 
             self.timer -= dt
 

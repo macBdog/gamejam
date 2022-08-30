@@ -26,7 +26,7 @@ class Particles:
             "NUM_PARTICLE_EMITTERS": str(Particles.NumEmitters)
         }
         particle_shader = Graphics.process_shader_source(graphics.builtin_shader(Shader.PARTICLES, ShaderType.PIXEL), shader_substitutes)
-        self.shader = Graphics.create_shader(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), particle_shader)
+        self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), particle_shader)
         
         self.texture = Texture("")
         self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)

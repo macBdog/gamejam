@@ -53,8 +53,8 @@ class Input:
             self.key_mapping.update({key_action_pair: [func, args]})
 
 
-    def add_scroll_mapping(self, func, args=None):
-        self.scroll_mapping.append((func, args))
+    def add_scroll_mapping(self, func, kwargs={}):
+        self.scroll_mapping.append((func, kwargs))
 
 
     def add_joystick_mapping(self, button: int, func, args=None):
@@ -78,8 +78,9 @@ class Input:
 
         for mapping in self.scroll_mapping:
             func = mapping[0]
-            args = mapping[1]
-            func(args, xpos, ypos)
+            kwargs = mapping[1]
+            kwargs.update({"x": xpos, "y": ypos})
+            func(**kwargs)
 
 
     def handle_mouse_button(self, window, button: int, action: int, mods: int):

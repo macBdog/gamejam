@@ -1,6 +1,7 @@
 import enum
 
-from gamejam.animation import Animation
+from gamejam.animation import AnimType, Animation
+from gamejam.graphics import Shader
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
 from gamejam.font import Font
@@ -26,7 +27,6 @@ class Widget:
         self.sprite = sprite
         self.alignX = AlignX.Centre
         self.alignY = AlignY.Middle
-        self.animation = None
         self.touched = False
         self.hover_begin = None
         self.hover_end = None
@@ -45,6 +45,8 @@ class Widget:
         self.text_alignY = AlignY.Middle
         self.text_pos = [0.0, 0.0]
         self.text_col = [1.0, 1.0, 1.0, 1.0]
+
+        self.animation = None
 
 
     def hover_begin_default(self):
@@ -110,8 +112,15 @@ class Widget:
         pass
 
 
-    def animate(self, animation: Animation):
-        self.animation = animation
+    def animate(self, anim_type: AnimType, time: float):
+        if self.animation == None:
+            self.animation = Animation(anim_type, time)
+        else:
+            self.animation.reset(anim_type, time)
+
+        anim_prog = self.sprite.graphics.get_program(Shader.ANIM)
+        if self.sprite.shader != anim_prog:
+            self.sprite.shader = anim_prog
 
 
     def align(self, x: AlignX, y: AlignY):

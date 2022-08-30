@@ -20,10 +20,10 @@ from gamejam.settings import GameSettings
 
 class Shader(Enum):
     TEXTURE = 0
-    TEXTURE_ANIM = auto()
     COLOUR = auto()
     FONT = auto()
     PARTICLES = auto()
+    ANIM = auto()
 
 class ShaderType(Enum):
     VERTEX = 0
@@ -34,24 +34,43 @@ class Graphics:
     
 
     def __init__(self):
-        self.shaders = {}
-        self.indices = numpy.array([0, 1, 2, 2, 3, 0], dtype=numpy.uint32)
+        self._programs = {}
+        self._shaders = {}
+        self.default_indices = numpy.array([0, 1, 2, 2, 3, 0], dtype=numpy.uint32)
 
         # Pre-compile multiple shaders for general purpose drawing
-        self.shader_texture = compileProgram(
+        self._programs[Shader.TEXTURE] = compileProgram(
             compileShader(self.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), GL_VERTEX_SHADER), 
             compileShader(self.builtin_shader(Shader.TEXTURE, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
 
-        self.shader_colour = compileProgram(
+        self._programs[Shader.COLOUR] = compileProgram(
             compileShader(self.builtin_shader(Shader.COLOUR, ShaderType.VERTEX), GL_VERTEX_SHADER), 
             compileShader(self.builtin_shader(Shader.COLOUR, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
 
-        self.shader_font = compileProgram(
+        self._programs[Shader.FONT] = compileProgram(
             compileShader(self.builtin_shader(Shader.FONT, ShaderType.VERTEX), GL_VERTEX_SHADER), 
             compileShader(self.builtin_shader(Shader.FONT, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
+
+        self._programs[Shader.ANIM] = compileProgram(
+            compileShader(self.builtin_shader(Shader.ANIM, ShaderType.VERTEX), GL_VERTEX_SHADER), 
+            compileShader(self.builtin_shader(Shader.ANIM, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
+        )
+
+
+    def get_program(self, shader: Shader):
+        return self._programs[shader]
+
+
+    def builtin_shader(self, shader: Shader, type: ShaderType) -> str:
+        name = Graphics.get_shader_name(shader, type)
+        if name not in self._shaders:
+            path = Path(__file__).parent / Graphics.SHADER_PATH / name
+            with open(path, 'r') as shader_file:
+                self._shaders[name] = shader_file.read()   
+        return self._shaders[name]
 
 
     @staticmethod
@@ -59,17 +78,8 @@ class Graphics:
         return f"{shader._name_.lower()}.{'vert' if type is ShaderType.VERTEX else 'frag'}"
 
 
-    def builtin_shader(self, shader: Shader, type: ShaderType) -> str:
-        name = Graphics.get_shader_name(shader, type)
-        if name not in self.shaders:
-            path = Path(__file__).parent / Graphics.SHADER_PATH / name
-            with open(path, 'r') as shader_file:
-                self.shaders[name] = shader_file.read()
-        return self.shaders[name]
-
-
     @staticmethod
-    def create_shader(vertex_shader_source: str, pixel_shader_source: str):
+    def create_program(vertex_shader_source: str, pixel_shader_source: str):
         return compileProgram(
             compileShader(vertex_shader_source, GL_VERTEX_SHADER), 
             compileShader(pixel_shader_source, GL_FRAGMENT_SHADER)

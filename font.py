@@ -25,7 +25,7 @@ from OpenGL.GL import (
     GL_TRIANGLES
 )
 
-from gamejam.graphics import Graphics
+from gamejam.graphics import Graphics, Shader
 from gamejam.settings import GameSettings
 
 class Font():
@@ -146,26 +146,27 @@ class Font():
         # Create EBO
         self.EBO = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.EBO)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.graphics.indices, GL_STATIC_DRAW)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.graphics.default_indices, GL_STATIC_DRAW)
 
-        self.vertex_pos_id = glGetAttribLocation(graphics.shader_font, "VertexPosition")
+        shader_font = graphics.get_program(Shader.FONT)
+        self.vertex_pos_id = glGetAttribLocation(shader_font, "VertexPosition")
         glVertexAttribPointer(self.vertex_pos_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(0))
         glEnableVertexAttribArray(self.vertex_pos_id)
  
-        self.tex_coord_id = glGetAttribLocation(graphics.shader_font, "TexCoord")
+        self.tex_coord_id = glGetAttribLocation(shader_font, "TexCoord")
         glVertexAttribPointer(self.tex_coord_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(32))
         glEnableVertexAttribArray(self.tex_coord_id)
  
-        self.char_coord_id = glGetUniformLocation(graphics.shader_font, "CharCoord")
-        self.char_size_id = glGetUniformLocation(graphics.shader_font, "CharSize")
-        self.colour_id = glGetUniformLocation(graphics.shader_font, "Colour")
-        self.pos_id = glGetUniformLocation(graphics.shader_font, "Position")
-        self.size_id = glGetUniformLocation(graphics.shader_font, "Size")
+        self.char_coord_id = glGetUniformLocation(shader_font, "CharCoord")
+        self.char_size_id = glGetUniformLocation(shader_font, "CharSize")
+        self.colour_id = glGetUniformLocation(shader_font, "Colour")
+        self.pos_id = glGetUniformLocation(shader_font, "Position")
+        self.size_id = glGetUniformLocation(shader_font, "Size")
 
     def draw(self, string: str, font_size: int, pos: list, colour: list):
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
-        
-        glUseProgram(self.graphics.shader_font)
+        shader_font = self.graphics.get_program(Shader.FONT)
+        glUseProgram(shader_font)
         glUniform4f(self.colour_id, colour[0], colour[1], colour[2], colour[3]) 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
