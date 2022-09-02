@@ -1,12 +1,24 @@
 import enum
 import math
+from OpenGL.GL import (
+    glGetUniformLocation,
+    glUniform1iv,
+    glUniform1f, 
+    glUniform1fv, glUniform2fv, glUniform4fv,
+)
 
 class AnimType(enum.Enum):
+    """Matches shader preprocessor definitions in anim.frag"""
     FadeIn = 1
     FadeOut = 2
     Pulse = 3
     InOutSmooth = 4
     Rotate = 5
+    Throb = 6
+    Scroll = 7
+    ScrollHorizontal = 8
+    ScrollVertical = 9
+    
 
 class Animation:
     """ Animations store the state and timers for controller
@@ -25,9 +37,21 @@ class Animation:
         self.action_kwargs = None
         self.action_time = -1
         self.actioned = False
+
+        self._type_id = -1
+        self._val_id = -1
+        self._time_id = -1
+
         if self.type is AnimType.FadeOut:
             self.val = 1.0
     
+
+    def reset(self):
+        if self._type_id < 0:
+            self._type_id = glGetUniformLocation(self.shader, "AnimType")
+            self._val_id = glGetUniformLocation(self.shader, "AnimVal")
+            self._time_id = glGetUniformLocation(self.shader, "Time")
+
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.
@@ -36,7 +60,7 @@ class Animation:
         self.action = activation_func
         self.action_kwargs = action_kwargs
         self.action_time = time
-
+       
 
     def tick(self, dt: float):
         """Update timers and values as per the animation type.
@@ -70,5 +94,14 @@ class Animation:
                     else:
                         self.action(**self.action_kwargs)
                     self.actioned = True
+
+
+    def draw(self, dt: float):
+        def anim_uniforms():
+            glUniform1i(self._type_id, self.type)
+            glUniform1f(self._val_id, self.val)
+            glUniform1f(self._time_id, self.time)
+
+        self.sprite.draw(anim_uniforms)
 
                 

@@ -115,12 +115,12 @@ class Widget:
     def animate(self, anim_type: AnimType, time: float):
         if self.animation == None:
             self.animation = Animation(anim_type, time)
-        else:
-            self.animation.reset(anim_type, time)
 
         anim_prog = self.sprite.graphics.get_program(Shader.ANIM)
         if self.sprite.shader != anim_prog:
             self.sprite.shader = anim_prog
+
+        self.animation.reset(anim_type, time)
 
 
     def align(self, x: AlignX, y: AlignY):
@@ -174,16 +174,15 @@ class Widget:
         """Apply any changes to the widget rect."""
 
         # Apply any active animation
-        if self.animation and self.animation.active:
-            self.animation.tick(dt)
+        if self.animation:
+            if self.animation.active:
+                self.animation.tick(dt)
+            self.animation.draw(dt)
             
         if self.sprite is not None:
-            # Apply any colour changes
+            # Apply any colour changes defined by user funcs
             if self.colour_func is not None:
                 self.sprite.set_colour(self.colour_func(**self.colour_kwargs))
-
-            if self.animation is not None:
-                self.sprite.set_alpha(self.animation.val)
 
             self.sprite.draw()
 
