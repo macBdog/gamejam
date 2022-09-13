@@ -14,8 +14,8 @@ class Particles:
     """Simple shader only particles for the entire game."""
     NumEmitters = 8
 
-    def __init__(self, graphics: Graphics, display_ratio: float):
-        self.display_ratio = 1.0 / display_ratio
+    def __init__(self, graphics: Graphics):
+        self.display_ratio = graphics.display_ratio
         self.emitter = -1
         self.emitters = [0.0] * Particles.NumEmitters
         self.emitter_speeds = [1.0] * Particles.NumEmitters

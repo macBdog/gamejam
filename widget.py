@@ -114,11 +114,11 @@ class Widget:
 
     def animate(self, anim_type: AnimType, time: float):
         if self.animation == None:
-            self.animation = Animation(anim_type, time)
+            self.animation = Animation(self.sprite)
 
         anim_prog = self.sprite.graphics.get_program(Shader.ANIM)
         if self.sprite.shader != anim_prog:
-            self.sprite.shader = anim_prog
+            self.sprite.bind(anim_prog)
 
         self.animation.reset(anim_type, time)
 

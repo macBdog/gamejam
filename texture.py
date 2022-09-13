@@ -102,6 +102,11 @@ class SpriteTexture(Sprite):
     def __init__(self, graphics: Graphics, tex: Texture, colour: list, pos: list, size: list, shader=None):
         Sprite.__init__(self, graphics, colour, pos, size)
         self.texture = tex
+        self.bind(shader)
+
+
+    def bind(self, shader=None):
+        self.shader = self.graphics.get_program(Shader.TEXTURE) if shader is None else shader
 
         # Create array object
         self.VAO = glGenVertexArrays(1)
@@ -109,7 +114,7 @@ class SpriteTexture(Sprite):
 
         # Create Buffer object in gpu
         self.VBO = glGenBuffers(1)
-        self.rectangle = numpy.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], dtype=numpy.float32)
+        self.rectangle = Graphics.DEFAULT_RECTANGLE
 
         # Bind the buffer
         glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
@@ -119,8 +124,6 @@ class SpriteTexture(Sprite):
         self.EBO = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.EBO)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.graphics.default_indices, GL_STATIC_DRAW)
-
-        self.shader = self.graphics.get_program(Shader.TEXTURE) if shader is None else shader
 
         self.vertex_pos_id = glGetAttribLocation(self.shader, "VertexPosition")
         glVertexAttribPointer(self.vertex_pos_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(0))
@@ -133,6 +136,7 @@ class SpriteTexture(Sprite):
         self.colour_id = glGetUniformLocation(self.shader, "Colour")
         self.pos_id = glGetUniformLocation(self.shader, "Position")
         self.size_id = glGetUniformLocation(self.shader, "Size")
+
 
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)

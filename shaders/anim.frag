@@ -3,7 +3,8 @@
 in vec2 OutTexCoord;
 uniform int AnimType;
 uniform float AnimVal;
-uniform float Time;
+uniform float Timer;
+uniform float DisplayRatio;
 uniform sampler2D SamplerTex;
 uniform vec4 Colour;
 out vec4 outColour;
@@ -29,9 +30,22 @@ void main()
     {
         col.a * AnimVal;
     }
-    else if (AnimType == at_scroll) 
+    if (AnimType == at_rotate)
     {
-        uv += vec2(Time*0.05, Time*0.05);
+        float rx = sin(Timer * AnimVal);
+        float ry = cos(Timer * AnimVal);
+        mat2 r = mat2(ry, rx, -rx, ry);
+        uv = vec2((uv.x - 0.5) * DisplayRatio, uv.y - 0.5) * r;
+        uv.x += rx;
+        uv.y += ry;
+    }
+    if (AnimType == at_scroll_h || AnimType == at_scroll)
+    {
+        uv.x += Timer * AnimVal;
+    }
+    if (AnimType == at_scroll_v || AnimType == at_scroll)
+    {
+        uv.y += Timer * AnimVal;
     }
     outColour = texture(SamplerTex, uv) * col;
 }

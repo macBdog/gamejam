@@ -31,9 +31,10 @@ class ShaderType(Enum):
 
 class Graphics:
     SHADER_PATH = "shaders"
-    
+    DEFAULT_RECTANGLE = numpy.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], dtype=numpy.float32)
 
-    def __init__(self):
+    def __init__(self, display_width_over_height: float):
+        self.display_ratio = 1.0 / display_width_over_height
         self._programs = {}
         self._shaders = {}
         self.default_indices = numpy.array([0, 1, 2, 2, 3, 0], dtype=numpy.uint32)

@@ -58,10 +58,10 @@ class GameJam:
         self.running = True
 
         # Now we have an OpenGL context we can compile GPU programs
-        self.graphics = Graphics()
+        self.graphics = Graphics(self.window_width / self.window_height)
         self.textures = TextureManager(texture_path, self.graphics)
         self.input = Input(self.window, InputMethod.KEYBOARD)
-        self.particles = Particles(self.graphics, self.window_width / self.window_height)
+        self.particles = Particles(self.graphics)
         self.profile = Profile()
 
         # Bind escape to quit and prtscn to outputing profile info
