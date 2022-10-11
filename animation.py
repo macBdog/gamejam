@@ -6,6 +6,7 @@ from OpenGL.GL import (
     glUniform1f, 
 )
 
+from gamejam.bitset import BitSet
 from gamejam.texture import SpriteTexture
 
 class AnimType(enum.Enum):
@@ -36,6 +37,7 @@ class Animation:
         self.action_kwargs = None
         self.action_time = -1
         self.actioned = False
+        self.type = BitSet()
 
         self._type_id = -1
         self._val_id = -1
@@ -44,9 +46,11 @@ class Animation:
 
     def reset(self, new_type=None, time=0.0):
         self.timer = time
-        self.type = self.type if new_type is None else new_type
 
-        if self.type is AnimType.FadeOut:
+        if new_type is not None:
+            self.type.set_bit(new_type.value)
+
+        if self.type.is_bit_set(AnimType.FadeOut.value):
             self.val = 1.0
 
         if self._type_id < 0:
@@ -70,13 +74,13 @@ class Animation:
         :param dt: The time that has elapsed since the last tick.
         """
         if self.active:
-            if self.type is AnimType.FadeIn:
+            if self.type.is_bit_set(AnimType.FadeIn.value):
                 self.val = 1.0 - self.timer
-            elif self.type is AnimType.FadeOut:
+            elif self.type.is_bit_set(AnimType.FadeOut.value):
                 self.val = self.timer / 1.0
-            elif self.type is AnimType.Pulse:
+            elif self.type.is_bit_set(AnimType.Pulse.value):
                 self.val = math.sin(self.timer)
-            elif self.type is AnimType.InOutSmooth:
+            elif self.type.is_bit_set(AnimType.InOutSmooth.value):
                 self.val = (math.sin(((self.timer / 1.0) * math.pi * 2.0) - math.pi * 0.5) + 1.0) * 0.5
             
             self.timer -= dt
@@ -100,7 +104,7 @@ class Animation:
 
     def draw(self, dt: float):
         def anim_uniforms():
-            glUniform1i(self._type_id, self.type.value)
+            glUniform1i(self._type_id, self.type.get_bits())
             glUniform1f(self._val_id, self.val)
             glUniform1f(self._timer_id, self.timer)
             glUniform1f(self._display_ratio_id, self.sprite.graphics.display_ratio)
