@@ -1,10 +1,10 @@
-#ifndef shadertoy
 #version 430
 
+#ifndef shadertoy
 in vec2 OutTexCoord;
 uniform int AnimType;
 uniform float AnimVal;
-uniform float Timer;
+uniform float Time;
 uniform float DisplayRatio;
 uniform sampler2D SamplerTex;
 uniform vec4 Colour;
@@ -37,9 +37,9 @@ int setEffect(int Val, const int Effect)
     return Val | (1 << Effect);
 }
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
 #ifdef shadertoy
+void mainImage( out vec4 fragColor, in vec2 fragCoord)
+{
     int AnimType = setEffect(at_fade_in);
     AnimType = setEffect(AnimType, at_rotate);
     float AnimVal = 0.15;
@@ -49,6 +49,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec4 outColour;
     vec4 col = vec4(1.0, 1.0, 1.0, 1.0);
 #else
+void main()
+{
     vec2 uv = OutTexCoord;
     vec4 col = Colour;
 #endif
