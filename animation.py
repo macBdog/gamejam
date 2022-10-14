@@ -54,8 +54,8 @@ class Animation:
             self.val = 1.0
 
         if self._type_id < 0:
-            self._type_id = glGetUniformLocation(self.sprite.shader, "AnimType")
-            self._val_id = glGetUniformLocation(self.sprite.shader, "AnimVal")
+            self._type_id = glGetUniformLocation(self.sprite.shader, "Type")
+            self._val_id = glGetUniformLocation(self.sprite.shader, "Val")
             self._timer_id = glGetUniformLocation(self.sprite.shader, "Timer")
             self._display_ratio_id = glGetUniformLocation(self.sprite.shader, "DisplayRatio")
 
@@ -74,24 +74,13 @@ class Animation:
         :param dt: The time that has elapsed since the last tick.
         """
         if self.active:
-            if self.type.is_bit_set(AnimType.FadeIn.value):
-                self.val = 1.0 - self.timer
-            elif self.type.is_bit_set(AnimType.FadeOut.value):
-                self.val = self.timer / 1.0
-            elif self.type.is_bit_set(AnimType.Pulse.value):
-                self.val = math.sin(self.timer)
-            elif self.type.is_bit_set(AnimType.InOutSmooth.value):
-                self.val = (math.sin(((self.timer / 1.0) * math.pi * 2.0) - math.pi * 0.5) + 1.0) * 0.5
-            
-            self.timer -= dt
+            self.timer += dt
 
+            if self.val > 0 and self.timer >= self.val:
+                self.active = False
+                
             if self.action is not None:
-                do_action = self.timer <= self.action_time
-
-                if self.timer <= 0.0:
-                    self.active = False
-                    if self.action_time < 0:
-                        do_action = True
+                do_action = self.timer >= self.action_time
 
                 if do_action:
                     if not self.actioned:

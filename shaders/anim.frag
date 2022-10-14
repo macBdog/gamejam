@@ -1,17 +1,19 @@
 #version 430
 
+#define PI 3.141529
+
 #ifndef shadertoy
 in vec2 OutTexCoord;
-uniform int AnimType;
-uniform float AnimVal;
-uniform float Time;
+uniform int Type;
+uniform float Val;
+uniform float Timer;
 uniform float DisplayRatio;
 uniform sampler2D SamplerTex;
 uniform vec4 Colour;
 out vec4 outColour;
 #endif
 
-// AnimTypes match animation.AnimType
+// Types match animation.AnimType
 #define at_fade_in 1
 #define at_fade_out 2
 #define at_pulse 3
@@ -40,10 +42,10 @@ int setEffect(int Val, const int Effect)
 #ifdef shadertoy
 void mainImage( out vec4 fragColor, in vec2 fragCoord)
 {
-    int AnimType = setEffect(at_fade_in);
-    AnimType = setEffect(AnimType, at_rotate);
-    float AnimVal = 0.15;
-    float Time = iTime - floor(iTime);
+    int Type = setEffect(at_fade_in);
+    Type = setEffect(Type, at_rotate);
+    float Val = 1.0;
+    float Timer = iTime - floor(iTime);
     float DisplayRatio = 1.0 / (iResolution.x / iResolution.y);
     vec2 uv = fragCoord/iResolution.xy;
     vec4 outColour;
@@ -56,38 +58,38 @@ void main()
 #endif
 
     // Multiple effects can be set at once
-    if (hasEffect(AnimType, at_fade_in))
+    if (hasEffect(Type, at_fade_in))
     {
-        col.a = Time;
+        col.a = Timer / Val;
     }
-    if (hasEffect(AnimType, at_fade_out))
+    if (hasEffect(Type, at_fade_out))
     {
-        col.a = 1.0 - Time;
+        col.a = 1.0 - (Timer/ Val);
     }
-    if (hasEffect(AnimType, at_pulse))
+    if (hasEffect(Type, at_pulse))
     {
-        col.a = (sin(Time) + 1.0) * 0.5;
+        col.a = (sin(Timer) + 1.0) * 0.5;
     }
-    if (hasEffect(AnimType, at_in_out_smooth))
+    if (hasEffect(Type, at_in_out_smooth))
     {
-        float t = Time;
-        col.a = t * t * (3.0 - 2.0 * t);
+        float t = Timer / Val;
+        col.a = (sin((t * PI * 2.0) - PI * 0.5) + 1.0) * 0.5;
     }
-    if (hasEffect(AnimType, at_rotate))
+    if (hasEffect(Type, at_rotate))
     {
-        float rx = sin(Time * AnimVal);
-        float ry = cos(Time * AnimVal);
+        float rx = sin(Timer * Val);
+        float ry = cos(Timer * Val);
         uv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 1.5) * mat2(ry, rx, -rx, ry);
         uv.x += rx;
         uv.y += ry;
     }
-    if (hasEffect(AnimType, at_scroll_h) || hasEffect(AnimType, at_scroll))
+    if (hasEffect(Type, at_scroll_h) || hasEffect(Type, at_scroll))
     {
-        uv.x += Time * AnimVal;
+        uv.x += Timer * Val;
     }
-    if (hasEffect(AnimType, at_scroll_v) || hasEffect(AnimType, at_scroll))
+    if (hasEffect(Type, at_scroll_v) || hasEffect(Type, at_scroll))
     {
-        uv.y += Time * AnimVal;
+        uv.y += Timer * Val;
     }
     
     
