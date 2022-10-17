@@ -33,6 +33,7 @@ class GameJam:
         self.window_width = 1920
         self.window_height = 1080
         self.window_ratio = self.window_width / self.window_height
+        self.start_time = 0
         self.dt = 0.03
         self.fps = 0
         self.fps_last_update = 1
@@ -91,7 +92,8 @@ class GameJam:
 
 
     def begin(self):
-        dt_cur = dt_last = time.time()
+        self.start_time = time.time()
+        dt_cur = dt_last = self.start_time
 
         while self.running and not glfw.window_should_close(self.window):
             self.profile.update()

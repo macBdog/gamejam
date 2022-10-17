@@ -15,22 +15,22 @@ class Texture:
     def get_random_pixel():
         return [numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255)]
 
-    def get_random_texture(width:int, height:int):
+    def get_random_texture(width:int, height:int) -> list:
         tex = []
         for _ in range(width * height):
             tex += Texture.get_random_pixel()
         return tex
 
-    def __init__(self, texture_path: str):
+    def __init__(self, texture_path: str, default_width:int=32, default_height:int=32):
         if os.path.exists(texture_path):
             self.image = Image.open(texture_path)
             self.width = self.image.width
             self.height = self.image.height
             self.img_data = numpy.array(list(self.image.getdata()), numpy.uint8)
         else:
-            self.img_data = Texture.get_random_texture(32, 32)
-            self.width = 32
-            self.height = 32
+            self.img_data = Texture.get_random_texture(default_width, default_height)
+            self.width = default_width
+            self.height = default_height
         self.texture_id = glGenTextures(1)
 
         glBindTexture(GL_TEXTURE_2D, self.texture_id)

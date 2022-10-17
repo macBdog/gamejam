@@ -1,5 +1,4 @@
 import enum
-import math
 from OpenGL.GL import (
     glGetUniformLocation,
     glUniform1i,
@@ -59,6 +58,10 @@ class Animation:
             self._timer_id = glGetUniformLocation(self.sprite.shader, "Timer")
             self._display_ratio_id = glGetUniformLocation(self.sprite.shader, "DisplayRatio")
 
+
+    def set_animation(self, type:AnimType):
+        self.type.set_bit(type.value)
+        
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.

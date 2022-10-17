@@ -32,11 +32,17 @@ class Gui:
             print(f"Error when adding child gui {child.name} to {self.name}! Gui {child.name} already has a parent and it's name is {child.parent.name}.")
 
 
-    def add_widget(self, sprite: SpriteTexture, font:Font=None) -> Widget:
+    def add_create_widget(self, sprite: SpriteTexture, font:Font=None) -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
 
         widget = Widget(sprite, font)
+        self.widgets.append(widget)
+        return widget
+
+
+    def add_widget(self, widget: Widget) -> Widget:
+                
         self.widgets.append(widget)
         return widget
 

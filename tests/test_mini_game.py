@@ -1,11 +1,16 @@
 import os
+import time
 import math
 import numpy as np
+
+from gamejam.animation import AnimType
 from gamejam.font import Font
 from gamejam.gui import Gui
+from gamejam.widget import Widget
 from gamejam.input import InputActionKey, InputActionModifier
 from gamejam.settings import GameSettings
 from gamejam.gamejam import GameJam
+from gamejam.texture import Texture, SpriteTexture
 
 class MiniGame(GameJam):
     
@@ -13,15 +18,22 @@ class MiniGame(GameJam):
         super(MiniGame, self).__init__()
         self.name = "MiniGame"
         self.score = 0
-        self.magic_number = np.random.random_integers(1, 9)
+        self.magic_number = np.random.randint(1, 9 + 1)
 
 
     def prepare(self):
         super().prepare()
 
-        self.font = Font(os.path.join("res", "consola.ttf"), self.graphics, self.window)
-        self.gui = Gui(1024, 768, "gui")
+        self.font = Font(os.path.join("gamejam", "res", "consola.ttf"), self.graphics, self.window)
+        self.gui = Gui("gui")
         self.gui.set_active(True, True)
+
+        self.animated_bg_tex = Texture("", 128, 128)
+        self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5, 0.5])
+        self.animated_widget = Widget(self.animated_sprite)
+        self.animated_widget.animate(AnimType.Rotate)
+        self.animated_widget.animation.set_animation(AnimType.InOutSmooth)
+        self.gui.add_widget(self.animated_widget)
 
         if GameSettings.DEV_MODE:
             print("Finished preparing!")
@@ -57,30 +69,17 @@ class MiniGame(GameJam):
         super().end()
 
 
-class GameJamTests():
-    def test_mini_game():
-        jam = MiniGame()
-        jam.prepare()
-        jam.begin()
+def test_mini_game():
+    jam = MiniGame()
+    jam.prepare()
+    jam.begin()
 
-        # Wait
+    if time.time() >= jam.start_time + 100:
         jam.end()
         return True
-
-
-    def test_gui_hierachy():
-        jam = MiniGame()
-        jam.prepare()
-
-        gui_splash = Gui("parent")
-        gui_splash.set_active(True, True)
-        jam.gui.add_child(gui_splash)
-
-        jam.end()
-        return True
+    
+    return False
 
 
 if __name__ == "__main__":
-    test_suite = GameJamTests()
-    test_suite.test_mini_game()
-    test_suite.test_gui_hierachy()
+    test_mini_game()

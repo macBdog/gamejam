@@ -112,7 +112,7 @@ class Widget:
         pass
 
 
-    def animate(self, anim_type: AnimType, time: float):
+    def animate(self, anim_type: AnimType, time: float=-1.0):
         if self.animation == None:
             self.animation = Animation(self.sprite)
 
