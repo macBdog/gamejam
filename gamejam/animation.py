@@ -12,8 +12,8 @@ class AnimType(enum.Enum):
     """Matches shader preprocessor definitions in anim.frag"""
     FadeIn = 1
     FadeOut = 2
-    Pulse = 3
-    InOutSmooth = 4
+    FadeInOutSmooth = 3
+    Pulse = 4
     Rotate = 5
     Throb = 6
     Scroll = 7
@@ -43,14 +43,12 @@ class Animation:
         self._timer_id = -1
 
 
-    def reset(self, new_type=None, time=0.0):
-        self.timer = time
+    def reset(self, new_type=None, value=1.0):
+        self.timer = 0.0
+        self.val = value
 
         if new_type is not None:
-            self.type.set_bit(new_type.value)
-
-        if self.type.is_bit_set(AnimType.FadeOut.value):
-            self.val = 1.0
+            self.type.set_bit(new_type.value)   
 
         if self._type_id < 0:
             self._type_id = glGetUniformLocation(self.sprite.shader, "Type")
@@ -61,7 +59,7 @@ class Animation:
 
     def set_animation(self, type:AnimType):
         self.type.set_bit(type.value)
-        
+
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.

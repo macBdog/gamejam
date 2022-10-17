@@ -16,8 +16,8 @@ out vec4 outColour;
 // Types match animation.AnimType
 #define at_fade_in 1
 #define at_fade_out 2
-#define at_pulse 3
-#define at_in_out_smooth 4
+#define at_fade_in_out_smooth 3
+#define at_pulse 4
 #define at_rotate 5
 #define at_throb 6
 #define at_scroll 7
@@ -66,14 +66,14 @@ void main()
     {
         col.a = 1.0 - (Timer/ Val);
     }
-    if (hasEffect(Type, at_pulse))
-    {
-        col.a = (sin(Timer) + 1.0) * 0.5;
-    }
-    if (hasEffect(Type, at_in_out_smooth))
+    if (hasEffect(Type, at_fade_in_out_smooth))
     {
         float t = Timer / Val;
         col.a = (sin((t * PI * 2.0) - PI * 0.5) + 1.0) * 0.5;
+    }
+    if (hasEffect(Type, at_pulse))
+    {
+        col.a = (sin(Timer) + 1.0) * 0.5;
     }
     if (hasEffect(Type, at_rotate))
     {

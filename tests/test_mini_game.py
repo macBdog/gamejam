@@ -32,7 +32,7 @@ class MiniGame(GameJam):
         self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5, 0.5])
         self.animated_widget = Widget(self.animated_sprite)
         self.animated_widget.animate(AnimType.Rotate)
-        self.animated_widget.animation.set_animation(AnimType.InOutSmooth)
+        self.animated_widget.animation.set_animation(AnimType.Pulse)
         self.gui.add_widget(self.animated_widget)
 
         if GameSettings.DEV_MODE:

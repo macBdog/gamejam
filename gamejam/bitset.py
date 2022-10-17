@@ -20,6 +20,13 @@ class BitSet:
         return (self._bits & (1 << bit)) != 0
 
 
+    def is_bit_set(self, bits:list) -> bool:
+        for bit in bits:
+            if (self._bits & (1 << bit)) != 0:
+                return True
+        return False
+
+
     def get_bits(self) -> int:
         return self._bits
 
