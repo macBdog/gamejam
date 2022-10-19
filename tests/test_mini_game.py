@@ -17,8 +17,21 @@ class MiniGame(GameJam):
     def __init__(self):
         super(MiniGame, self).__init__()
         self.name = "MiniGame"
-        self.score = 0
+        self.reset()
+        
+
+    def reset(self, reset_score:bool=True):
+        if reset_score:
+            self.score = 0
         self.magic_number = np.random.randint(1, 9 + 1)
+
+
+    def guess_func(self, num: int):
+        if num == self.magic_number:
+            self.score += 10
+        else:
+            self.score -= 1
+        self.reset(reset_score=False)
 
 
     def prepare(self):
@@ -29,12 +42,14 @@ class MiniGame(GameJam):
         self.gui.set_active(True, True)
 
         self.animated_bg_tex = Texture("", 128, 128)
-        self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5, 0.5])
+        self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5 * self.graphics.display_ratio, 0.5])
         self.animated_widget = Widget(self.animated_sprite)
         self.animated_widget.animate(AnimType.Rotate)
         self.animated_widget.animation.set_animation(AnimType.Pulse)
         self.gui.add_widget(self.animated_widget)
 
+        for i in range(9):
+            self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.guess_func, i)
         if GameSettings.DEV_MODE:
             print("Finished preparing!")
 
@@ -44,17 +59,7 @@ class MiniGame(GameJam):
         if game_draw:
             self.profile.begin("game_loop")
             self.font.draw(f"Guess the number.", 12, [-0.5, 0.0], [1.0, 1.0, 1.0, 1.0])
-            self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])
-
-            if game_input:
-                def guess_func(num: int):
-                    if num == self.magic_number:
-                        self.score += 10
-                    else:
-                        self.score -= 1
-
-                    for i in range(9):
-                        self.input.add_key_mapping(10 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, guess_func, i)
+            self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])  
             self.profile.end()
 
             self.profile.begin("dev_mode")

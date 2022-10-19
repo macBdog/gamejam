@@ -9,6 +9,5 @@ Dev mode will run the game in debug mode with the following features:
     2. Show FPS and mouse coords on screen
 
 ### Task Queue:
-1. Test framework and action
-2. GUI hierarchy, relative positioning and editor
-3. Hot reload shaders
+1. GUI hierarchy, relative positioning and editor
+2. Hot reload shaders
