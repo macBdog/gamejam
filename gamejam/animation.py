@@ -5,8 +5,8 @@ from OpenGL.GL import (
     glUniform1f, 
 )
 
-from gamejam.bitset import BitSet
-from gamejam.texture import SpriteTexture
+from bitset import BitSet
+from texture import SpriteTexture
 
 class AnimType(enum.Enum):
     """Matches shader preprocessor definitions in anim.frag"""

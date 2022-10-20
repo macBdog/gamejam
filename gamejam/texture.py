@@ -3,7 +3,7 @@ import os.path
 from PIL import Image
 import numpy
 
-from gamejam.graphics import Graphics, Shader
+from graphics import Graphics, Shader
 
 
 class Texture:

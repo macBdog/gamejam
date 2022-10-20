@@ -79,7 +79,7 @@ def test_mini_game():
     jam.prepare()
     jam.begin()
 
-    if time.time() >= jam.start_time + 100:
+    if time.time() >= jam.start_time + 10:
         jam.end()
         return True
     

@@ -1,7 +1,7 @@
-from gamejam.widget import Widget
-from gamejam.texture import SpriteTexture
-from gamejam.cursor import Cursor
-from gamejam.font import Font
+from widget import Widget
+from texture import SpriteTexture
+from cursor import Cursor
+from font import Font
 
 class Gui:
     """Manager style functionality for a collection of widget classes.
