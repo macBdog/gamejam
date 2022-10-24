@@ -1,6 +1,6 @@
-from settings import GameSettings
-from graphics import Graphics, Shader, ShaderType
-from texture import SpriteTexture, Texture
+from gamejam.settings import GameSettings
+from gamejam.graphics import Graphics, Shader, ShaderType
+from gamejam.texture import SpriteTexture, Texture
 
 from OpenGL.GL import (
     glGetUniformLocation,

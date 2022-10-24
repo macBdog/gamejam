@@ -5,8 +5,8 @@ from OpenGL.GL import (
     glUniform1f, 
 )
 
-from bitset import BitSet
-from texture import SpriteTexture
+from gamejam.bitset import BitSet
+from gamejam.texture import SpriteTexture
 
 class AnimType(enum.Enum):
     """Matches shader preprocessor definitions in anim.frag"""
@@ -63,7 +63,7 @@ class Animation:
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.
-        :param time for the time in the animation to execute, -1 means when complete.
+        :param time for the time in the animation to execute
         """
         self.action = activation_func
         self.action_kwargs = action_kwargs

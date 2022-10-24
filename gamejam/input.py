@@ -1,9 +1,9 @@
 import glfw
 from enum import Enum
 
-from cursor import Cursor
-from settings import GameSettings
-from quickmaff import clamp
+from gamejam.cursor import Cursor
+from gamejam.settings import GameSettings
+from gamejam.quickmaff import clamp
 
 
 class InputActionKey(Enum):

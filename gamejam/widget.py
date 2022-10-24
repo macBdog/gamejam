@@ -1,10 +1,10 @@
 import enum
 
-from animation import AnimType, Animation
-from graphics import Shader
-from texture import SpriteTexture
-from cursor import Cursor
-from font import Font
+from gamejam.animation import AnimType, Animation
+from gamejam.graphics import Shader
+from gamejam.texture import SpriteTexture
+from gamejam.cursor import Cursor
+from gamejam.font import Font
 
 
 class AlignX(enum.Enum):

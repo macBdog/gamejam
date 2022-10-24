@@ -25,8 +25,8 @@ from OpenGL.GL import (
     GL_TRIANGLES
 )
 
-from graphics import Graphics, Shader
-from settings import GameSettings
+from gamejam.graphics import Graphics, Shader
+from gamejam.settings import GameSettings
 
 class Font():
     def blit(self, dest, src, loc):

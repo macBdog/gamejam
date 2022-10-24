@@ -1,4 +1,3 @@
-import os
 import glfw
 import time
 import math
@@ -15,14 +14,14 @@ from OpenGL.GL import (
     GL_TRUE
 )
 
-from graphics import Graphics
-from input import Input, InputActionKey, InputMethod, InputActionModifier
-from texture import TextureManager
-from gui import Gui
-from font import Font
-from profile import Profile
-from particles import Particles
-from settings import GameSettings
+from gamejam.graphics import Graphics
+from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
+from gamejam.texture import TextureManager
+from gamejam.gui import Gui
+from gamejam.font import Font
+from gamejam.profile import Profile
+from gamejam.particles import Particles
+from gamejam.settings import GameSettings
 
 class GameJam:
     """A generic interactive frame interpolation loop without connection to specific logic."""

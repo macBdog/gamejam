@@ -1,7 +1,7 @@
-from widget import Widget
-from texture import SpriteTexture
-from cursor import Cursor
-from font import Font
+from gamejam.widget import Widget
+from gamejam.texture import SpriteTexture
+from gamejam.cursor import Cursor
+from gamejam.font import Font
 
 class Gui:
     """Manager style functionality for a collection of widget classes.
@@ -42,7 +42,6 @@ class Gui:
 
 
     def add_widget(self, widget: Widget) -> Widget:
-                
         self.widgets.append(widget)
         return widget
 

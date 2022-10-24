@@ -16,7 +16,7 @@ from OpenGL.GL.shaders import (
     compileProgram, compileShader
 )
 
-from settings import GameSettings
+from gamejam.settings import GameSettings
 
 class Shader(Enum):
     TEXTURE = 0
