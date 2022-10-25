@@ -79,9 +79,9 @@ void main()
     {
         float rx = sin(Timer * Val);
         float ry = cos(Timer * Val);
-        uv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 1.5) * mat2(ry, rx, -rx, ry);
-        uv.x += rx;
-        uv.y += ry;
+        uv = vec2((uv.x - 0.5), uv.y - 1.5) * mat2(ry, rx, -rx, ry);
+        uv.x += rx + 0.5;
+        uv.y += ry + 0.5;
     }
     if (hasEffect(Type, at_scroll_h) || hasEffect(Type, at_scroll))
     {

@@ -21,7 +21,7 @@ class Texture:
             tex += Texture.get_random_pixel()
         return tex
 
-    def __init__(self, texture_path: str, default_width:int=32, default_height:int=32):
+    def __init__(self, texture_path: str, default_width:int=32, default_height:int=32, wrap:bool=True):
         if os.path.exists(texture_path):
             self.image = Image.open(texture_path)
             self.width = self.image.width
@@ -34,8 +34,12 @@ class Texture:
         self.texture_id = glGenTextures(1)
 
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        if wrap:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        else:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
@@ -162,20 +166,20 @@ class TextureManager:
         self.graphics = graphics
         self.textures = {}
 
-    def get(self, texture_name: str) -> SpriteTexture:
+    def get(self, texture_name: str, wrap:bool=True) -> SpriteTexture:
         if texture_name in self.textures:
             return self.textures[texture_name]
         else:
             texture_path = os.path.join(self.base_path, texture_name)
-            new_texture = Texture(texture_path)
+            new_texture = Texture(texture_path, wrap=wrap)
             self.textures[texture_name] = new_texture
             return new_texture
 
-    def create_sprite_shape(self, colour: list, position: list, size: list, shader=None):
+    def create_sprite_shape(self, colour: list, position: list, size: list, shader=None, wrap:bool=True):
         return SpriteShape(self.graphics, colour, position, size, shader)
 
-    def create_sprite_texture(self, texture_name: str, position: list, size: list, shader=None):
-        return SpriteTexture(self.graphics, self.get(texture_name), [1.0, 1.0, 1.0, 1.0], position, size, shader)
+    def create_sprite_texture(self, texture_name: str, position: list, size: list, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], position, size, shader)
 
-    def create_sprite_texture_tinted(self, texture_name: str, colour: list, position: list, size: list, shader=None):
-        return SpriteTexture(self.graphics, self.get(texture_name), colour, position, size, shader)
+    def create_sprite_texture_tinted(self, texture_name: str, colour: list, position: list, size: list, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), colour, position, size, shader)
