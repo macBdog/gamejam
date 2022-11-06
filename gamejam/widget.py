@@ -25,8 +25,14 @@ class Widget:
 
     def __init__(self, sprite: SpriteTexture, font:Font=None):
         self.sprite = sprite
-        self.alignX = AlignX.Centre
-        self.alignY = AlignY.Middle
+        self.offset = sprite.pos if sprite is not None else [0.0, 0.0]
+        self.size = sprite.size if sprite is not None else [0.1, 0.1]
+        self._draw_pos = [0.0, 0.0]
+        self._parent = None
+        self.align_x = AlignX.Centre
+        self.align_y = AlignY.Middle
+        self.anchor_x = AlignX.Centre
+        self.anchor_y = AlignY.Middle
         self.touched = False
         self.hover_begin = None
         self.hover_end = None
@@ -35,8 +41,7 @@ class Widget:
         self.colour_func = None
         self.colour_kwargs = None
         self.actioned = False
-        if self.sprite is not None:
-            self.alpha_start = self.sprite.colour[3]
+        self.alpha_start = self.sprite.colour[3] if self.sprite is not None else 1.0
         self.alpha_hover = -0.25
         self.font = font
         self.text = ""
@@ -45,8 +50,49 @@ class Widget:
         self.text_alignY = AlignY.Middle
         self.text_pos = [0.0, 0.0]
         self.text_col = [1.0, 1.0, 1.0, 1.0]
-
         self.animation = None
+
+
+    def _calc_draw_pos(self):
+        """Draw position is relative to the hierachy size and alignment as follows:
+        ┌──────────────────┐
+        │TopLeft           │
+        │                  │
+        │                  │
+        │   MiddleCenter   │
+        │                  │
+        │                  │
+        │       BottomRight│
+        └──────────────────┘  
+        """
+        self._draw_pos = self.offset
+    
+        if self._parent is not None:
+            self._draw_pos += self._parent._draw_pos
+
+            # Offset from parent X
+            if self.align_x == AlignX.Middle:
+                self._draw_pos[0] += self._parent.size[0] * 0.5
+            elif self.align_x == AlignX.Right:
+                self._draw_pos[0] += self._parent.size[0]
+
+            # Offset from parent Y
+            if self.align_y == AlignY.Centre:
+                self._draw_pos[1] -= self._parent.size[1] * 0.5
+            elif self.align_y == AlignY.Bottom:
+                self._draw_pos[1] -= self._parent.size[1]
+
+        # Offset from anchor X
+        if self.anchor_x == AlignX.Middle:
+            self._draw_pos[0] -= self.size[0] * 0.5
+        elif self.anchor_x == AlignX.Right:
+            self._draw_pos[0] -= self._parent.size[0]
+
+        # Offset from anchor Y
+        if self.align_y == AlignY.Centre:
+            self._draw_pos[1] += self.size[1] * 0.5
+        elif self.align_y == AlignY.Bottom:
+            self._draw_pos[1] += self.size[1]
 
 
     def hover_begin_default(self):

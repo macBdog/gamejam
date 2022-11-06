@@ -84,7 +84,7 @@ class GameJam:
     
         glfw.swap_interval(GameSettings.VSYNC)
 
-        self.gui = Gui("gui")
+        self.gui = Gui("gui", self.graphics)
         self.gui.set_active(False, False)
         font_path = Path(__file__).parent / "res" / "consola.ttf"
         self.font = Font(str(font_path), self.graphics, self.window)

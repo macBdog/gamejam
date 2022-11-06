@@ -24,6 +24,7 @@ class Shader(Enum):
     FONT = auto()
     PARTICLES = auto()
     ANIM = auto()
+    DEBUG = auto()
 
 class ShaderType(Enum):
     VERTEX = 0
@@ -59,7 +60,7 @@ class Graphics:
             compileShader(self.builtin_shader(Shader.ANIM, ShaderType.VERTEX), GL_VERTEX_SHADER), 
             compileShader(self.builtin_shader(Shader.ANIM, ShaderType.PIXEL), GL_FRAGMENT_SHADER)
         )
-
+        
 
     def get_program(self, shader: Shader):
         return self._programs[shader]
