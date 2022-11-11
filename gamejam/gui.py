@@ -1,4 +1,4 @@
-from gamejam.widget import Widget
+from gamejam.widget import Widget, TouchState
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
 from gamejam.font import Font
@@ -8,7 +8,9 @@ from gamejam.texture import SpriteTexture, Texture
 
 from OpenGL.GL import (
     glGetUniformLocation,
+    glUniform1i,
     glUniform1f,
+    glUniform2f,
     glUniform1iv,
     glUniform4fv
 )
@@ -27,8 +29,10 @@ class Gui:
         self.children = {}
         self.display_ratio = graphics.display_ratio
         self.debug_dirty = False
+        self.debug_selected = None
         self.debug_size_offset = [0.0] * Gui.NUM_DEBUG_WIDGETS * 4
         self.debug_align = [0] * Gui.NUM_DEBUG_WIDGETS
+        self.cursor = None
 
         shader_substitutes = {
             "NUM_DEBUG_WIDGETS": str(Gui.NUM_DEBUG_WIDGETS)
@@ -39,6 +43,9 @@ class Gui:
         self.texture = Texture("")
         self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
 
+        self.mouse_click_id = glGetUniformLocation(self.shader, "MouseClick")
+        self.mouse_coord_id = glGetUniformLocation(self.shader, "MouseCoord")
+        self.selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_size_offset_id = glGetUniformLocation(self.shader, "WidgetSizeOffset")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
@@ -80,12 +87,34 @@ class Gui:
 
 
     def touch(self, mouse: Cursor):
+        if self.cursor is None:
+            self.cursor = mouse
+
         for _, name in enumerate(self.children):
             self.children[name].touch(mouse)
 
         if self.active_input:
             for i in self.widgets:
                 i.touch(mouse)
+
+            if GameSettings.DEV_MODE:
+                self.touch_debug(mouse)
+
+
+    def touch_debug(self, mouse: Cursor):
+        touched_widget = False
+        for i in self.widgets:
+            if self.debug_selected is None:
+                if i.touch(mouse) == TouchState.Touched:
+                    self.debug_selected = i
+                    break
+            else:
+                if i.touch(mouse) == TouchState.Touched:
+                    touched_widget = True
+        
+        # Deselect any selected widget
+        if mouse.buttons[0] and touched_widget == False:
+            self.debug_selected = None
 
 
     def draw(self, dt: float):
@@ -101,8 +130,14 @@ class Gui:
 
 
     def draw_debug(self, dt: float):
+        selected_widget_id = -1
         def debug_widget_uniforms():
             glUniform1f(self.display_ratio_id, self.display_ratio)
+            glUniform1i(self.mouse_click_id, 0)
+            
+            if self.cursor is not None:
+                glUniform2f(self.mouse_coord_id, self.cursor.pos[0], self.cursor.pos[1])
+            glUniform1i(self.selected_id, selected_widget_id)
             glUniform4fv(self.debug_size_offset_id, Gui.NUM_DEBUG_WIDGETS, self.debug_size_offset)
             glUniform1iv(self.debug_align_id, Gui.NUM_DEBUG_WIDGETS, self.debug_align)
 
@@ -110,6 +145,8 @@ class Gui:
         if self.debug_dirty:
             debug_widget_index = 0
             for i in self.widgets:
+                if i == self.debug_selected:
+                    selected_widget_id = i
                 so_index = debug_widget_index * 4
                 self.debug_size_offset[so_index + 0] = i.size[0]
                 self.debug_size_offset[so_index + 1] = i.size[1]

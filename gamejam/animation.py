@@ -12,14 +12,15 @@ class AnimType(enum.Enum):
     """Matches shader preprocessor definitions in anim.frag"""
     FadeIn = 1
     FadeOut = 2
-    FadeInOutSmooth = 3
-    Pulse = 4
+    Pulse = 3
+    FadeInOutSmooth = 4
     Rotate = 5
     Throb = 6
-    Scroll = 7
-    ScrollHorizontal = 8
-    ScrollVertical = 9
-  
+    ScrollHorizontal = 7
+    ScrollVertical = 8
+    FillHorizontal = 9
+    FillVertical = 10
+    FillRadial = 11
 
 class Animation:
     """ Animations store the state and timers for controller

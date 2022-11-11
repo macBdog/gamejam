@@ -7,6 +7,12 @@ from gamejam.cursor import Cursor
 from gamejam.font import Font
 
 
+class TouchState(enum.Enum):
+    Clear = 0
+    Hover = 1
+    Touching = 2 
+    Touched = 3
+
 class AlignX(enum.Enum):
     Left = 1
     Centre = 2
@@ -158,7 +164,7 @@ class Widget:
         pass
 
 
-    def animate(self, anim_type: AnimType, time: float=-1.0):
+    def animate(self, anim_type: AnimType, time: float=-1.0) -> Animation:
         if self.animation == None:
             self.animation = Animation(self.sprite)
 
@@ -167,6 +173,7 @@ class Widget:
             self.sprite.bind(anim_prog)
 
         self.animation.reset(anim_type, time)
+        return self.animation
 
 
     def align(self, x: AlignX, y: AlignY):
@@ -185,35 +192,46 @@ class Widget:
                 self.sprite.pos = [self.sprite.pos[0], self.sprite.pos[1] + self.sprite.size[1] * 0.5]
 
 
-    def touch(self, mouse: Cursor):
+    def touch(self, mouse: Cursor) -> TouchState:
         """Test for activation and hover states."""
-        if self.sprite is not None:
-            if self.action is not None:
-                size_half = [abs(i * 0.5) for i in self.sprite.size]
-                inside = (  mouse.pos[0] >= self.sprite.pos[0] - size_half[0] and
-                            mouse.pos[0] <= self.sprite.pos[0] + size_half[0] and
-                            mouse.pos[1] >= self.sprite.pos[1] - size_half[1] and
-                            mouse.pos[1] <= self.sprite.pos[1] + size_half[1])
-                if self.touched:
-                    if not inside:
-                        self.on_hover_end()
-                        self.touched = False
-                else:
-                    if inside:
-                        self.on_hover_begin()
-                        self.touched = True
+        state = TouchState.Clear
+        touch_pos = self.offset
+        touch_size = self.size
 
-                # Perform the action on mouse up
-                if inside:
-                    if mouse.buttons[0]:
-                        if not self.actioned:
-                            self.actioned = True
-                    elif self.actioned:
-                        self.action(**self.action_kwargs)
-                        self.actioned = False
+        if self.sprite is not None: # this could be removed now that Widget constructor sets size from sprite?
+            touch_pos = self.sprite.pos
+            touch_size = self.sprite.size
 
-                if not mouse.buttons[0]:
-                    self.actioned = False
+        size_half = [abs(i * 0.5) for i in touch_size]
+        inside = (  mouse.pos[0] >= touch_pos[0] - size_half[0] and
+                    mouse.pos[0] <= touch_pos[0] + size_half[0] and
+                    mouse.pos[1] >= touch_pos[1] - size_half[1] and
+                    mouse.pos[1] <= touch_pos[1] + size_half[1])
+        if self.touched:
+            if not inside:
+                self.on_hover_end()
+                self.touched = False
+        else:
+            if inside:
+                self.on_hover_begin()
+                self.touched = True
+                state = TouchState.Hover
+
+        # Perform the action on release
+        if inside:
+            if mouse.buttons[0]:
+                if not self.actioned:
+                    self.actioned = True
+                    state = TouchState.Touching
+            elif self.actioned:
+                if self.action is not None:
+                    self.action(**self.action_kwargs)
+                self.actioned = False
+                state = TouchState.Touched
+
+        if not mouse.buttons[0]:
+            self.actioned = False
+        return state
 
 
     def draw(self, dt: float):
