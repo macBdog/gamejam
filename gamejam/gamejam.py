@@ -68,10 +68,9 @@ class GameJam:
         self.input.add_key_mapping(256, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.quit)
         self.input.add_key_mapping(283, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.profile.capture_next_frame)
 
-        def toggle_dev_mode():
-            GameSettings.DEV_MODE = not GameSettings.DEV_MODE
-
-        # CtrlD to enable developer mode
+        def toggle_dev_mode(): GameSettings.DEV_MODE = not GameSettings.DEV_MODE
+        
+        # Ctrl-D to enable developer mode
         self.input.add_key_mapping(68, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, toggle_dev_mode)
 
         glViewport(0, 0, self.window_width, self.window_height)
@@ -84,10 +83,12 @@ class GameJam:
     
         glfw.swap_interval(GameSettings.VSYNC)
 
-        self.gui = Gui("gui", self.graphics)
-        self.gui.set_active(False, False)
         font_path = Path(__file__).parent / "res" / "consola.ttf"
         self.font = Font(str(font_path), self.graphics, self.window)
+
+        self.gui = Gui("gui", self.graphics, self.font)
+        self.gui.set_active(True, True)
+        self.gui.init_debug_bindings(self.input)
 
 
     def begin(self):
@@ -119,8 +120,9 @@ class GameJam:
             self.profile.end()
 
             self.profile.begin("dev_stats")
-            if GameSettings.DEV_MODE:
+            if GameSettings.DEV_MODE or GameSettings.GUI_MODE:
                 cursor_pos = self.input.cursor.pos
+                self.font.draw("^", 8, [cursor_pos[0] - 0.01, cursor_pos[1] - 0.03], [1.0] * 4)
                 self.font.draw(f"FPS: {math.floor(self.fps)}", 12, [0.65, 0.75], [0.81, 0.81, 0.81, 1.0])
                 self.font.draw(f"X: {math.floor(cursor_pos[0] * 100) / 100}\nY: {math.floor(cursor_pos[1] * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
             self.profile.end()

@@ -13,23 +13,15 @@
 #define NUM_DEBUG_WIDGETS 128
 vec4 WidgetSizeOffset[NUM_DEBUG_WIDGETS];
 int WidgetAlign[NUM_DEBUG_WIDGETS];
-vec4 MouseCoord;
-int MouseDown;
-int MouseClick;
+int WidgetHoverId;
 int WidgetSelectedId;
-//      mouse.xy  = mouse position during last button down
-//  abs(mouse.zw) = mouse position during last button click
-// sign(mouze.z)  = button is down
-// sign(mouze.w)  = button is clicked
 #else
 in vec2 OutTexCoord;
 out vec4 outColour;
 
 uniform vec4 Colour;
 uniform float DisplayRatio;
-uniform vec4 MouseCoord;
-uniform int MouseDown;
-uniform int MouseClick;
+uniform int WidgetHoverId;
 uniform int WidgetSelectedId;
 uniform vec4 WidgetSizeOffset[NUM_DEBUG_WIDGETS];
 uniform int WidgetAlign[NUM_DEBUG_WIDGETS];
@@ -119,7 +111,7 @@ vec4 drawWidgets(in float ratio, in vec2 uv)
         if (align_x > 0)
         {
             vec4 widget = drawWidget(ratio, uv, vec2(0.0, 0.0), WidgetSizeOffset[i].xy, WidgetSizeOffset[i].zw, align_x, align_y, 0, 0);
-            widget.a = i == WidgetSelectedId ? 1.0 : 0.75;
+            widget.a = i == WidgetSelectedId ? 1.0 : i == WidgetHoverId ? 0.75 : 0.5;
             col = max(col, widget);
         }
     }
@@ -132,9 +124,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float DisplayRatio = 1.0 / (iResolution.x / iResolution.y);
     vec2 uv = fragCoord/iResolution.xy;
     vec4 col = vec4(1.0, 1.0, 1.0, 1.0);
-    MouseCoord = iMouse / iResolution.x;
-    MouseDown = MouseCoord.z > 0.0 ? 1 : 0;
-    MouseClick = MouseCoord.w > 0.0 ? 1 : 0;
 #else
 void main()
 {

@@ -1,7 +1,10 @@
+from enum import Enum
+
 from gamejam.widget import Widget, TouchState
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
 from gamejam.font import Font
+from gamejam.input import Input, InputActionKey, InputActionModifier
 from gamejam.graphics import Graphics, Shader, ShaderType
 from gamejam.settings import GameSettings
 from gamejam.texture import SpriteTexture, Texture
@@ -10,25 +13,37 @@ from OpenGL.GL import (
     glGetUniformLocation,
     glUniform1i,
     glUniform1f,
-    glUniform2f,
     glUniform1iv,
     glUniform4fv
 )
+
+class GuiEditMode(Enum):
+    NONE = 0,
+    OFFSET = 1,
+    SIZE = 2,
+    TEXT_OFFSET = 3,
+    TEXT_SIZE = 4,
 
 class Gui:
     """Manager style functionality for a collection of widget classes.
     Also convenience functions for window handling and display of position hierarchy."""
     NUM_DEBUG_WIDGETS = 128
 
-    def __init__(self, name: str, graphics: Graphics):
+    def __init__(self, name: str, graphics: Graphics, debug_font: Font):
         self.name = name
+        self.offset = [0.0, 0.0]
+        self.draw_pos = [0.0, 0.0]
         self.active_draw = False
         self.active_input = False
         self.parent = None
         self.widgets = []
         self.children = {}
         self.display_ratio = graphics.display_ratio
+        self.debug_font = debug_font
+        self.debug_edit_mode = GuiEditMode.NONE
+        self.debug_edit_start_pos = [0.0, 0.0]
         self.debug_dirty = False
+        self.debug_hover = None
         self.debug_selected = None
         self.debug_size_offset = [0.0] * Gui.NUM_DEBUG_WIDGETS * 4
         self.debug_align = [0] * Gui.NUM_DEBUG_WIDGETS
@@ -43,12 +58,64 @@ class Gui:
         self.texture = Texture("")
         self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
 
-        self.mouse_click_id = glGetUniformLocation(self.shader, "MouseClick")
-        self.mouse_coord_id = glGetUniformLocation(self.shader, "MouseCoord")
-        self.selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
+        self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
+        self.debug_selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
         self.debug_size_offset_id = glGetUniformLocation(self.shader, "WidgetSizeOffset")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
+
+
+    def toggle_gui_mode(**kwargs):
+        self = kwargs["self"]
+        GameSettings.GUI_MODE = not GameSettings.GUI_MODE
+        if GameSettings.GUI_MODE == False:
+            self.dump()
+    
+
+    def add_new_widget(**kwargs):
+        self = kwargs["self"]
+        if GameSettings.GUI_MODE:
+            self.add_create_widget(None)
+
+
+    def remove_widget(**kwargs):
+        self = kwargs["self"]
+        if GameSettings.GUI_MODE:
+            if self.debug_selected is not None:
+                self.debug_selected = None
+                #TODO self.remove_widget(self.debug_selected)
+
+
+    def toggle_edit_mode(**kwargs):
+        self = kwargs["self"]
+        mode = kwargs["mode"]
+        if GameSettings.GUI_MODE:
+            if self.debug_edit_mode is GuiEditMode.NONE:
+                self.debug_edit_mode = mode
+            else:
+                self.debug_edit_mode = GuiEditMode.NONE
+                self.debug_edit_start_pos = None
+
+
+    def init_debug_bindings(self, input: Input):
+        """Bindings for the gui editor"""
+        
+        # Ctrl+N for add widget
+        input.add_key_mapping(78, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.add_new_widget, {"self": self})
+
+        # Ctrl+X to remove selected widget
+        input.add_key_mapping(88, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.remove_widget, {"self": self})
+
+        # O and S for modifying widget offset and size
+        input.add_key_mapping(79, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.OFFSET})
+        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.SIZE})
+
+        # F and T for text offset and size
+        input.add_key_mapping(70, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.TEXT_SIZE})
+        input.add_key_mapping(84, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.TEXT_OFFSET})
+
+        # Ctrl-G to enable gui editing mode, exiting dumps current widgets
+        input.add_key_mapping(71, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.toggle_gui_mode, {"self": self})
 
 
     def is_active(self):
@@ -94,27 +161,48 @@ class Gui:
             self.children[name].touch(mouse)
 
         if self.active_input:
-            for i in self.widgets:
-                i.touch(mouse)
-
-            if GameSettings.DEV_MODE:
+            if GameSettings.GUI_MODE:
                 self.touch_debug(mouse)
+            else:
+                for i in self.widgets:
+                    i.touch(mouse)
 
 
     def touch_debug(self, mouse: Cursor):
+        if self.debug_edit_mode is not GuiEditMode.NONE and self.debug_selected is not None:
+            if self.debug_edit_start_pos is None:
+                self.debug_edit_start_pos = self.cursor.pos
+            else:
+                edit_diff = [
+                    mouse.pos[0] - self.debug_edit_start_pos[0],
+                    mouse.pos[1] - self.debug_edit_start_pos[1],
+                ]
+                if self.debug_edit_mode is GuiEditMode.OFFSET:
+                    self.debug_selected.offset[0] = edit_diff[0]
+                    self.debug_selected.offset[1] = edit_diff[1]
+                elif self.debug_edit_mode is GuiEditMode.SIZE:
+                        self.debug_selected.size[0] = edit_diff[0]
+                        self.debug_selected.size[1] = edit_diff[1]
+            
         touched_widget = False
+        self.debug_hover = None
         for i in self.widgets:
+            touch_state = i.touch(mouse)
+            if touch_state == TouchState.Hover:
+                self.debug_hover = i
+
             if self.debug_selected is None:
-                if i.touch(mouse) == TouchState.Touched:
+                if touch_state == TouchState.Touched:
                     self.debug_selected = i
                     break
             else:
-                if i.touch(mouse) == TouchState.Touched:
+                if touch_state == TouchState.Touched:
                     touched_widget = True
         
         # Deselect any selected widget
         if mouse.buttons[0] and touched_widget == False:
             self.debug_selected = None
+            self.debug_edit_mode = GuiEditMode.NONE
 
 
     def draw(self, dt: float):
@@ -122,37 +210,39 @@ class Gui:
             self.children[name].draw(dt)
 
         if self.active_draw:
+            if GameSettings.GUI_MODE:
+                self.draw_debug(dt)
+
             for i in self.widgets:
                 i.draw(dt)
 
-            if GameSettings.DEV_MODE:
-                self.draw_debug(dt)
-
 
     def draw_debug(self, dt: float):
+        self.debug_font.draw(self.name, 16, self.draw_pos, [1.0] * 4)
+        
+        hover_widget_id = -1
         selected_widget_id = -1
         def debug_widget_uniforms():
             glUniform1f(self.display_ratio_id, self.display_ratio)
-            glUniform1i(self.mouse_click_id, 0)
-            
-            if self.cursor is not None:
-                glUniform2f(self.mouse_coord_id, self.cursor.pos[0], self.cursor.pos[1])
-            glUniform1i(self.selected_id, selected_widget_id)
+            glUniform1i(self.debug_selected_id, selected_widget_id)
+            glUniform1i(self.debug_hover_id, hover_widget_id)
             glUniform4fv(self.debug_size_offset_id, Gui.NUM_DEBUG_WIDGETS, self.debug_size_offset)
             glUniform1iv(self.debug_align_id, Gui.NUM_DEBUG_WIDGETS, self.debug_align)
 
         self.debug_dirty = True # remove, should be sent up the hierachy by widget mutators
         if self.debug_dirty:
             debug_widget_index = 0
-            for i in self.widgets:
-                if i == self.debug_selected:
+            for i, widget in enumerate(self.widgets):
+                if widget == self.debug_selected:
                     selected_widget_id = i
+                if widget == self.debug_hover:
+                    hover_widget_id = i
                 so_index = debug_widget_index * 4
-                self.debug_size_offset[so_index + 0] = i.size[0]
-                self.debug_size_offset[so_index + 1] = i.size[1]
-                self.debug_size_offset[so_index + 2] = i.offset[0]
-                self.debug_size_offset[so_index + 3] = i.offset[1]
-                self.debug_align[debug_widget_index] = (i.align_x.value * 10) + i.align_y.value
+                self.debug_size_offset[so_index + 0] = widget.size[0]
+                self.debug_size_offset[so_index + 1] = widget.size[1]
+                self.debug_size_offset[so_index + 2] = widget.offset[0]
+                self.debug_size_offset[so_index + 3] = widget.offset[1]
+                self.debug_align[debug_widget_index] = (widget.align_x.value * 10) + widget.align_y.value
                 debug_widget_index += 1
                 if debug_widget_index >= Gui.NUM_DEBUG_WIDGETS:
                     break
@@ -164,3 +254,10 @@ class Gui:
             self.sprite.draw(debug_widget_uniforms)
             self.debug_dirty = False
 
+
+    def dump(self):
+        """Print config to stdout"""
+        print(f"{self.name}:")
+        for i in self.widgets:
+            i.dump()
+            print("")

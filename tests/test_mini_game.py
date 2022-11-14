@@ -1,7 +1,8 @@
 import os
-import time
 import math
 import numpy as np
+import time
+import sys
 
 from gamejam.animation import AnimType
 from gamejam.font import Font
@@ -26,7 +27,9 @@ class MiniGame(GameJam):
         self.magic_number = np.random.randint(1, 9 + 1)
 
 
-    def guess_func(self, num: int):
+    def guess_func(**kwargs):
+        self = kwargs["self"]
+        num = kwargs["num"]
         if num == self.magic_number:
             self.score += 10
         else:
@@ -37,10 +40,6 @@ class MiniGame(GameJam):
     def prepare(self):
         super().prepare()
 
-        self.font = Font(os.path.join("gamejam", "res", "consola.ttf"), self.graphics, self.window)
-        self.gui = Gui("gui", self.graphics)
-        self.gui.set_active(True, True)
-
         self.animated_bg_tex = Texture("", 128, 128)
         self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5 * self.graphics.display_ratio, 0.5])
         self.animated_widget = Widget(self.animated_sprite)
@@ -49,7 +48,7 @@ class MiniGame(GameJam):
         self.gui.add_widget(self.animated_widget)
 
         for i in range(9):
-            self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.guess_func, i)
+            self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.guess_func, {"self": self, "num": i})
         if GameSettings.DEV_MODE:
             print("Finished preparing!")
 
@@ -79,7 +78,16 @@ def test_mini_game():
     jam.prepare()
     jam.begin()
 
-    if time.time() >= jam.start_time + 10:
+    test_time = 10
+    arg_string = "seconds"
+    for _, arg in enumerate(sys.argv):
+        found_char = arg.find(arg_string)
+        if found_char >= 0:
+            arg_val = arg[found_char + len(arg_string):].replace("=", "")
+            arg_val = arg_val.replace(" ", "")
+            test_time = float(arg_val)
+
+    if time.time() >= jam.start_time + test_time:
         jam.end()
         return True
     

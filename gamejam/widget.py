@@ -39,7 +39,7 @@ class Widget:
         self.align_y = AlignY.Middle
         self.anchor_x = AlignX.Centre
         self.anchor_y = AlignY.Middle
-        self.touched = False
+        self.hover = False
         self.hover_begin = None
         self.hover_end = None
         self.action = None
@@ -207,15 +207,16 @@ class Widget:
                     mouse.pos[0] <= touch_pos[0] + size_half[0] and
                     mouse.pos[1] >= touch_pos[1] - size_half[1] and
                     mouse.pos[1] <= touch_pos[1] + size_half[1])
-        if self.touched:
-            if not inside:
+        if self.hover:
+            if inside:
+                state = TouchState.Hover
+            else:
                 self.on_hover_end()
-                self.touched = False
+                self.hover = False
         else:
             if inside:
                 self.on_hover_begin()
-                self.touched = True
-                state = TouchState.Hover
+                self.hover = True
 
         # Perform the action on release
         if inside:
@@ -260,3 +261,8 @@ class Widget:
             self.font.draw(self.text, self.text_size, text_pos, self.text_col)
 
 
+    def dump(self):
+        """Print config to stdout"""
+        print(f"pos = [{self.offset[0]:.2f}, {self.offset[1]:.2f}]")
+        print(f"size = [{self.size[0]:.2f}, {self.size[1]:.2f}]")
+        print(f"align = [{self.align_x}, {self.align_y}]")

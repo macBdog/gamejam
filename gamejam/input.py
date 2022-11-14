@@ -45,12 +45,12 @@ class Input:
         glfw.set_scroll_callback(window, self.handle_scroll_update)
 
 
-    def add_key_mapping(self, key: int, action: InputActionKey, modifier: InputActionModifier, func, args=None):
+    def add_key_mapping(self, key: int, action: InputActionKey, modifier: InputActionModifier, func, kwargs=None):
         key_action_pair = (key, action, modifier)
         if key_action_pair in self.key_mapping:
-            self.key_mapping[key_action_pair].extend([func, args])
+            self.key_mapping[key_action_pair].extend([func, kwargs])
         else:
-            self.key_mapping.update({key_action_pair: [func, args]})
+            self.key_mapping.update({key_action_pair: [func, kwargs]})
 
 
     def add_scroll_mapping(self, func, kwargs={}):
@@ -120,8 +120,8 @@ class Input:
                 num_mappings = len(func_args) // 2
                 for i in range(num_mappings):
                     func = func_args[i * 2]
-                    args = func_args[i * 2 + 1]
-                    if args is None:
+                    kwargs = func_args[i * 2 + 1]
+                    if kwargs is None:
                         func()
                     else:
-                        func(args)
+                        func(**kwargs)
