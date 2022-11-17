@@ -60,7 +60,7 @@ void main()
     vec4 col = Colour;
 #endif
 
-        // Multiple effects can be set at once
+    // Multiple effects can be set at once
     if (hasEffect(Type, at_fade_in))
     {
         col.a = Timer / Val;
@@ -88,9 +88,10 @@ void main()
     }
     if (hasEffect(Type, at_throb))
     {
-        float amount = (sin(Timer * PI) + 1.0) * -0.5;
-        uv *= amount;
-        uv -= amount * 0.5;
+        float amount = (sin(Timer * PI) + 1.0) * 0.5;
+        uv -= 0.5;
+        uv *= 1.0 + amount;
+        uv += 0.5;
     }
     if (hasEffect(Type, at_scroll_h))
     {

@@ -43,9 +43,9 @@ class MiniGame(GameJam):
         self.animated_bg_tex = Texture("", 128, 128)
         self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5 * self.graphics.display_ratio, 0.5])
         self.animated_widget = Widget(self.animated_sprite)
-        self.animated_widget.animate(AnimType.Rotate)
-        self.animated_widget.animation.set_animation(AnimType.Pulse)
-        self.gui.add_widget(self.animated_widget)
+        self.trophy1.animate(AnimType.Throb)
+        self.animated_widget.animation.set_animation(AnimType.Throb)
+        self.gui.add_widget(self.trophy1)
 
         for i in range(9):
             self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.guess_func, {"self": self, "num": i})

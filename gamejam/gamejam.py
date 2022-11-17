@@ -86,9 +86,9 @@ class GameJam:
         font_path = Path(__file__).parent / "res" / "consola.ttf"
         self.font = Font(str(font_path), self.graphics, self.window)
 
-        self.gui = Gui("gui", self.graphics, self.font)
+        self.gui = Gui("default", self.graphics, self.font)
         self.gui.set_active(True, True)
-        self.gui.init_debug_bindings(self.input)
+        Gui.init_debug_bindings(self.gui, self.input)
 
 
     def begin(self):

@@ -56,7 +56,7 @@ class Gui:
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), debug_shader)
         
         self.texture = Texture("")
-        self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
+        self.debug_sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
 
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
@@ -65,57 +65,62 @@ class Gui:
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
 
 
+    @staticmethod
     def toggle_gui_mode(**kwargs):
-        self = kwargs["self"]
+        gui = kwargs["gui"]
         GameSettings.GUI_MODE = not GameSettings.GUI_MODE
         if GameSettings.GUI_MODE == False:
-            self.dump()
+            gui.dump()
     
 
+    @staticmethod
     def add_new_widget(**kwargs):
-        self = kwargs["self"]
+        gui = kwargs["gui"]
         if GameSettings.GUI_MODE:
-            self.add_create_widget(None)
+            gui.add_create_widget(None)
 
 
+    @staticmethod
     def remove_widget(**kwargs):
-        self = kwargs["self"]
+        gui = kwargs["gui"]
         if GameSettings.GUI_MODE:
-            if self.debug_selected is not None:
-                self.debug_selected = None
+            if gui.debug_selected is not None:
+                gui.debug_selected = None
                 #TODO self.remove_widget(self.debug_selected)
 
 
+    @staticmethod
     def toggle_edit_mode(**kwargs):
-        self = kwargs["self"]
+        gui = kwargs["gui"]
         mode = kwargs["mode"]
         if GameSettings.GUI_MODE:
-            if self.debug_edit_mode is GuiEditMode.NONE:
-                self.debug_edit_mode = mode
+            if gui.debug_edit_mode is GuiEditMode.NONE:
+                gui.debug_edit_mode = mode
             else:
-                self.debug_edit_mode = GuiEditMode.NONE
-                self.debug_edit_start_pos = None
+                gui.debug_edit_mode = GuiEditMode.NONE
+                gui.debug_edit_start_pos = None
 
 
-    def init_debug_bindings(self, input: Input):
+    @staticmethod
+    def init_debug_bindings(gui, input: Input):
         """Bindings for the gui editor"""
         
         # Ctrl+N for add widget
-        input.add_key_mapping(78, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.add_new_widget, {"self": self})
+        input.add_key_mapping(78, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.add_new_widget, {"gui": gui})
 
         # Ctrl+X to remove selected widget
-        input.add_key_mapping(88, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.remove_widget, {"self": self})
+        input.add_key_mapping(88, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.remove_widget, {"gui": gui})
 
         # O and S for modifying widget offset and size
-        input.add_key_mapping(79, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.OFFSET})
-        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.SIZE})
+        input.add_key_mapping(79, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"gui": gui, "mode": GuiEditMode.OFFSET})
+        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"gui": gui, "mode": GuiEditMode.SIZE})
 
         # F and T for text offset and size
-        input.add_key_mapping(70, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.TEXT_SIZE})
-        input.add_key_mapping(84, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"self": self, "mode": GuiEditMode.TEXT_OFFSET})
+        input.add_key_mapping(70, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"gui": gui, "mode": GuiEditMode.TEXT_SIZE})
+        input.add_key_mapping(84, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, Gui.toggle_edit_mode, {"gui": gui, "mode": GuiEditMode.TEXT_OFFSET})
 
         # Ctrl-G to enable gui editing mode, exiting dumps current widgets
-        input.add_key_mapping(71, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.toggle_gui_mode, {"self": self})
+        input.add_key_mapping(71, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, Gui.toggle_gui_mode, {"gui": gui})
 
 
     def is_active(self):
@@ -251,7 +256,7 @@ class Gui:
                 self.debug_align[debug_widget_index] = 0
                 debug_widget_index += 1
 
-            self.sprite.draw(debug_widget_uniforms)
+            self.debug_sprite.draw(debug_widget_uniforms)
             self.debug_dirty = False
 
 
