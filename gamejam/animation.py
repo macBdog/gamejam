@@ -30,31 +30,37 @@ class Animation:
     :param time: A float for the duration of the function
     """
     def __init__(self, sprite: SpriteTexture):
+        self.timer = 0.0
+        self.time = 1.0
+        self.frac = 0.0
+        self.mag = 1.0
         self.sprite = sprite
-        self.val = 1.0
         self.active = True
         self.action = None
         self.action_kwargs = None
         self.action_time = -1
         self.actioned = False
         self.type = BitSet()
+        self.loop = True
 
         self._type_id = -1
-        self._val_id = -1
-        self._timer_id = -1
+        self._mag_id = -1       # The magnitude of the effect, a multiplier
+        self._frac_id = -1      # The fraction of the effect between 0.0 and 1.0   
 
 
-    def reset(self, new_type=None, value=1.0):
+    def reset(self, new_type=None, time=-1.0, mag=1.0):
         self.timer = 0.0
-        self.val = value
+        self.time = 1.0
+        self.frac = 0.0
+        self.mag = mag   
 
         if new_type is not None:
             self.type.set_bit(new_type.value)   
 
         if self._type_id < 0:
             self._type_id = glGetUniformLocation(self.sprite.shader, "Type")
-            self._val_id = glGetUniformLocation(self.sprite.shader, "Val")
-            self._timer_id = glGetUniformLocation(self.sprite.shader, "Timer")
+            self._mag_id = glGetUniformLocation(self.sprite.shader, "Mag")
+            self._frac_id = glGetUniformLocation(self.sprite.shader, "Frac")
             self._display_ratio_id = glGetUniformLocation(self.sprite.shader, "DisplayRatio")
 
 
@@ -78,12 +84,21 @@ class Animation:
         if self.active:
             self.timer += dt
 
-            if self.val > 0 and self.timer >= self.val:
-                self.active = False
-                
-            if self.action is not None:
-                do_action = self.timer >= self.action_time
+            # Using a timer to drive frac
+            do_action = False
+            if self.time > 0.0:
+                if self.timer >= self.time:
+                    do_action = True
+                    if self.loop:
+                        self.timer = 0.0
+                        self.active = True
+                    else:
+                        self.active = False
+                        self.timer = self.time
 
+                self.frac = self.timer / self.time    
+
+            if self.action is not None:
                 if do_action:
                     if not self.actioned:
                         if self.action_kwargs is None:
@@ -96,8 +111,8 @@ class Animation:
     def draw(self, dt: float):
         def anim_uniforms():
             glUniform1i(self._type_id, self.type.get_bits())
-            glUniform1f(self._val_id, self.val)
-            glUniform1f(self._timer_id, self.timer)
+            glUniform1f(self._mag_id, self.mag)
+            glUniform1f(self._frac_id, self.frac)
             glUniform1f(self._display_ratio_id, self.sprite.graphics.display_ratio)
 
         self.sprite.draw(anim_uniforms)

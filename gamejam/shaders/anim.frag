@@ -6,8 +6,8 @@
 #ifndef shadertoy
 in vec2 OutTexCoord;
 uniform int Type;
-uniform float Val;
-uniform float Timer;
+uniform float Frac;
+uniform float Mag;
 uniform float DisplayRatio;
 uniform sampler2D SamplerTex;
 uniform vec4 Colour;
@@ -47,8 +47,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord)
 {
     int Type = setEffect(at_fade_in);
     Type = setEffect(Type, at_rotate);
-    float Val = 1.0;
-    float Timer = iTime - floor(iTime);
+    float Mag = 1.0;
+    float Frac = iTime - floor(iTime);
     float DisplayRatio = 1.0 / (iResolution.x / iResolution.y);
     vec2 uv = fragCoord/iResolution.xy;
     vec4 outColour;
@@ -63,58 +63,57 @@ void main()
     // Multiple effects can be set at once
     if (hasEffect(Type, at_fade_in))
     {
-        col.a = Timer / Val;
+        col.a = Frac * Mag;
     }
     if (hasEffect(Type, at_fade_out))
     {
-        col.a = 1.0 - (Timer/ Val);
+        col.a = 1.0 - (Frac / Mag);
     }
     if (hasEffect(Type, at_pulse))
     {
-        col.a = (sin(Timer * PI) + 1.0) * 0.5;
+        col.a = (sin(Frac * Mag * PI) + 1.0) * 0.5;
     }
     if (hasEffect(Type, at_in_out_smooth))
     {
-        float t = Timer / Val;
-        col.a = (sin((t * PI * 2.0) - PI * 0.5) + 1.0) * 0.5;
+        col.a = (sin((Frac * Mag * PI * 2.0) - PI * 0.5) + 1.0) * 0.5;
     }
     if (hasEffect(Type, at_rotate))
     {
-        float rx = sin(Timer * Val);
-        float ry = cos(Timer * Val);
+        float rx = sin(Frac * Mag);
+        float ry = cos(Frac * Mag);
         uv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 1.5) * mat2(ry, rx, -rx, ry);
         uv.x += rx;
         uv.y += ry;
     }
     if (hasEffect(Type, at_throb))
     {
-        float amount = (sin(Timer * PI) + 1.0) * 0.5;
+        float amount = (sin(Frac * Mag * PI) + 1.0) * 0.5;
         uv -= 0.5;
         uv *= 1.0 + amount;
         uv += 0.5;
     }
     if (hasEffect(Type, at_scroll_h))
     {
-        uv.x += Timer * Val;
+        uv.x += Frac * Mag;
     }
     if (hasEffect(Type, at_scroll_v))
     {
-        uv.y += Timer * Val;
+        uv.y += Frac * Mag;
     }
     if (hasEffect(Type, at_fill_h))
     {
-        col *= uv.x > Timer * Val ? 0.333 : 1.0;
+        col *= uv.x > Frac * Mag ? 0.333 : 1.0;
     }
     if (hasEffect(Type, at_fill_v))
     {
-        col *= uv.y > Timer * Val ? 0.333 : 1.0;
+        col *= uv.y > Frac * Mag ? 0.333 : 1.0;
     }
     if (hasEffect(Type, at_fill_radial))
     {
-        float theta = TAU / (Timer / Val);
+        float theta = TAU / (Frac * Mag);
         vec2 ruv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 0.5);
         float a = atan(ruv.x, ruv.y);
-        float b = TAU * 2.0  - atan(ruv.x, ruv.y);
+        float b = TAU * 2.0 - atan(ruv.x, ruv.y);
         col *= b > theta ? 1.0 : 0.333;
     }
     

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from gamejam.widget import Widget, TouchState
+from gamejam.gui_widget import TouchState
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
 from gamejam.font import Font
@@ -8,6 +8,7 @@ from gamejam.input import Input, InputActionKey, InputActionModifier
 from gamejam.graphics import Graphics, Shader, ShaderType
 from gamejam.settings import GameSettings
 from gamejam.texture import SpriteTexture, Texture
+from gamejam.widget import Widget
 
 from OpenGL.GL import (
     glGetUniformLocation,
@@ -24,20 +25,16 @@ class GuiEditMode(Enum):
     TEXT_OFFSET = 3,
     TEXT_SIZE = 4,
 
-class Gui:
+class Gui(Widget):
     """Manager style functionality for a collection of widget classes.
     Also convenience functions for window handling and display of position hierarchy."""
     NUM_DEBUG_WIDGETS = 128
 
     def __init__(self, name: str, graphics: Graphics, debug_font: Font):
+        super().__init__()
         self.name = name
-        self.offset = [0.0, 0.0]
-        self.draw_pos = [0.0, 0.0]
         self.active_draw = False
         self.active_input = False
-        self.parent = None
-        self.widgets = []
-        self.children = {}
         self.display_ratio = graphics.display_ratio
         self.debug_font = debug_font
         self.debug_edit_mode = GuiEditMode.NONE
@@ -63,6 +60,8 @@ class Gui:
         self.debug_selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
         self.debug_size_offset_id = glGetUniformLocation(self.shader, "WidgetSizeOffset")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
+
+        self.set_size([2.0, 2.0])
 
 
     @staticmethod
@@ -132,45 +131,30 @@ class Gui:
         self.active_input = do_input
 
 
-    def add_child(self, child):
-        if child.name not in self.children and child.parent == None:
-            child.parent = self
-            self.children[child.name] = child
-        else:
-            print(f"Error when adding child gui {child.name} to {self.name}! Gui {child.name} already has a parent and it's name is {child.parent.name}.")
-
-
     def add_create_widget(self, sprite: SpriteTexture, font:Font=None) -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
 
         widget = Widget(sprite, font)
-        self.widgets.append(widget)
-        return widget
-
-
-    def add_widget(self, widget: Widget) -> Widget:
-        self.widgets.append(widget)
+        self.add_child(widget)
         return widget
 
 
     def delete_widget(self, widget: Widget):
-        self.widgets.remove(widget)
+        if widget in self._children:
+            self._children.remove(widget)
 
 
     def touch(self, mouse: Cursor):
         if self.cursor is None:
             self.cursor = mouse
 
-        for _, name in enumerate(self.children):
-            self.children[name].touch(mouse)
-
         if self.active_input:
             if GameSettings.GUI_MODE:
                 self.touch_debug(mouse)
             else:
-                for i in self.widgets:
-                    i.touch(mouse)
+                for child in self._children:
+                    child.touch(mouse)
 
 
     def touch_debug(self, mouse: Cursor):
@@ -183,16 +167,14 @@ class Gui:
                     mouse.pos[1] - self.debug_edit_start_pos[1],
                 ]
                 if self.debug_edit_mode is GuiEditMode.OFFSET:
-                    self.debug_selected.offset[0] = edit_diff[0]
-                    self.debug_selected.offset[1] = edit_diff[1]
+                    self.debug_selected.set_offset(edit_diff)
                 elif self.debug_edit_mode is GuiEditMode.SIZE:
-                        self.debug_selected.size[0] = edit_diff[0]
-                        self.debug_selected.size[1] = edit_diff[1]
+                        self.debug_selected.set_size(edit_diff)
             
         touched_widget = False
         self.debug_hover = None
-        for i in self.widgets:
-            touch_state = i.touch(mouse)
+        for i, child in enumerate(self._children):
+            touch_state = child.touch(mouse)
             if touch_state == TouchState.Hover:
                 self.debug_hover = i
 
@@ -211,19 +193,16 @@ class Gui:
 
 
     def draw(self, dt: float):
-        for _, name in enumerate(self.children):
-            self.children[name].draw(dt)
-
         if self.active_draw:
-            if GameSettings.GUI_MODE:
-                self.draw_debug(dt)
+            super().draw(dt)
 
-            for i in self.widgets:
-                i.draw(dt)
+            if self.active_draw:
+                if GameSettings.GUI_MODE:
+                    self.draw_debug(dt)
 
 
     def draw_debug(self, dt: float):
-        self.debug_font.draw(self.name, 16, self.draw_pos, [1.0] * 4)
+        self.debug_font.draw(self.name, 16, self._draw_pos, [1.0] * 4)
         
         hover_widget_id = -1
         selected_widget_id = -1
@@ -234,20 +213,22 @@ class Gui:
             glUniform4fv(self.debug_size_offset_id, Gui.NUM_DEBUG_WIDGETS, self.debug_size_offset)
             glUniform1iv(self.debug_align_id, Gui.NUM_DEBUG_WIDGETS, self.debug_align)
 
+        child_widgets = self._children
+
         self.debug_dirty = True # remove, should be sent up the hierachy by widget mutators
         if self.debug_dirty:
             debug_widget_index = 0
-            for i, widget in enumerate(self.widgets):
+            for i, widget in enumerate(child_widgets):
                 if widget == self.debug_selected:
                     selected_widget_id = i
                 if widget == self.debug_hover:
                     hover_widget_id = i
                 so_index = debug_widget_index * 4
-                self.debug_size_offset[so_index + 0] = widget.size[0]
-                self.debug_size_offset[so_index + 1] = widget.size[1]
-                self.debug_size_offset[so_index + 2] = widget.offset[0]
-                self.debug_size_offset[so_index + 3] = widget.offset[1]
-                self.debug_align[debug_widget_index] = (widget.align_x.value * 10) + widget.align_y.value
+                self.debug_size_offset[so_index + 0] = widget._size[0]
+                self.debug_size_offset[so_index + 1] = widget._size[1]
+                self.debug_size_offset[so_index + 2] = widget._offset[0]
+                self.debug_size_offset[so_index + 3] = widget._offset[1]
+                self.debug_align[debug_widget_index] = (widget._align_x.value * 10) + widget._align_y.value
                 debug_widget_index += 1
                 if debug_widget_index >= Gui.NUM_DEBUG_WIDGETS:
                     break
@@ -259,10 +240,3 @@ class Gui:
             self.debug_sprite.draw(debug_widget_uniforms)
             self.debug_dirty = False
 
-
-    def dump(self):
-        """Print config to stdout"""
-        print(f"{self.name}:")
-        for i in self.widgets:
-            i.dump()
-            print("")

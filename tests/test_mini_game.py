@@ -5,9 +5,7 @@ import time
 import sys
 
 from gamejam.animation import AnimType
-from gamejam.font import Font
-from gamejam.gui import Gui
-from gamejam.widget import Widget
+from gamejam.gui_widget import GuiWidget
 from gamejam.input import InputActionKey, InputActionModifier
 from gamejam.settings import GameSettings
 from gamejam.gamejam import GameJam
@@ -26,29 +24,44 @@ class MiniGame(GameJam):
             self.score = 0
         self.magic_number = np.random.randint(1, 9 + 1)
 
-
+    @staticmethod
     def guess_func(**kwargs):
-        self = kwargs["self"]
+        game = kwargs["game"]
         num = kwargs["num"]
-        if num == self.magic_number:
-            self.score += 10
+        if num == game.magic_number:
+            game.score += 10
         else:
-            self.score -= 1
-        self.reset(reset_score=False)
+            game.score -= 1
+        MiniGame.reset(game, reset_score=False)
 
 
     def prepare(self):
         super().prepare()
 
-        self.animated_bg_tex = Texture("", 128, 128)
-        self.animated_sprite = SpriteTexture(self.graphics, self.animated_bg_tex, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [0.5 * self.graphics.display_ratio, 0.5])
-        self.animated_widget = Widget(self.animated_sprite)
-        self.trophy1.animate(AnimType.Throb)
-        self.animated_widget.animation.set_animation(AnimType.Throb)
-        self.gui.add_widget(self.trophy1)
+        # Make ten guessing buttons each with a different animation effect
+        num_widgets = 10
+        widget_dimension = 0.35
+        widget_size = [widget_dimension * self.graphics.display_ratio, widget_dimension]
+        self.guess_widgets = []
+        self.guess_sprites = []
+        for i in range(num_widgets):
+            idx = i + 1
+            anim = AnimType(11 - i)
+            widget_pos = [-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5)]
+            
+            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], widget_pos, widget_size)
+            widget = GuiWidget(sprite, self.font)
+            
+            widget.set_text(str(idx), 14, [0.0, 0.0])
+            widget.set_action(MiniGame.guess_func, {"game": self, "num": idx})
+            widget.animate(anim)
+            self.gui.add_child(widget)
 
-        for i in range(9):
-            self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.guess_func, {"self": self, "num": i})
+            self.guess_sprites.append(sprite)
+            self.guess_widgets.append(widget)
+
+            self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, MiniGame.guess_func, {"game": self, "num": i})
+            
         if GameSettings.DEV_MODE:
             print("Finished preparing!")
 
@@ -57,7 +70,7 @@ class MiniGame(GameJam):
         game_draw, game_input = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
-            self.font.draw(f"Guess the number.", 12, [-0.5, 0.0], [1.0, 1.0, 1.0, 1.0])
+            self.font.draw(f"Guess the number.", 12, [-0.5, 0.7], [1.0, 1.0, 1.0, 1.0])
             self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])  
             self.profile.end()
 
