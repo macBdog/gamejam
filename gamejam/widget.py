@@ -15,10 +15,10 @@ class AlignY(Enum):
     Bottom = 3
 
 
-@dataclass
-class Alignment():
-    align_x: AlignX
-    align_y: AlignY
+@dataclass(init=True, eq=True)
+class Alignment:
+    x: AlignX
+    y: AlignY
 
 
 def widget_dirty(func):
@@ -30,22 +30,20 @@ def widget_dirty(func):
 
 
 class Widget():
-    def __init__(self, name: str=None):
+    def __init__(self, name: str=""):
         # Draw pos automatically gets refreshed when the dirty flag is set
         self._dirty = True
         self._draw_pos = [0.0, 0.0]
-        self.name = name if name is None else f"Widget-{hex(id(self))[6:]}"
+        self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
         
         self._offset = [0.0, 0.0]
         self._size = [0.1, 0.1]
 
         # Where this widget is drawn relative to it's parent anchor
-        self._align_x = AlignX.Centre
-        self._align_y = AlignY.Middle
+        self._align = Alignment(AlignX.Centre, AlignY.Middle)
 
         # What part of the parent this widget positions relative to
-        self._align_to_x = AlignX.Centre
-        self._align_to_y = AlignY.Middle
+        self._align_to = Alignment(AlignX.Centre, AlignY.Middle)
         
         # Hierarchy
         self._parent = None
@@ -55,7 +53,7 @@ class Widget():
     def draw(self, dt: float):
         """Apply any changes to the widget rect."""
         if self._dirty:
-            self._draw_pos = Widget.calc_draw_pos(self._offset, self._size, self._align_x, self._align_y, self._align_to_x, self._align_to_y, self._parent)
+            self._draw_pos = Widget.calc_draw_pos(self._offset, self._size, self._align, self._align_to, self._parent)
             self._dirty = False
 
         for child in self._children:
@@ -81,15 +79,13 @@ class Widget():
 
 
     @widget_dirty
-    def set_align(self, align_x: AlignX, align_y: AlignY):
-        self._align_x = align_x
-        self._align_y = align_y
+    def set_align(self, align: Alignment):
+        self._align = align
 
     
     @widget_dirty
-    def set_align_to(self, align_x: AlignX, align_y: AlignY):
-        self._align_to_x = align_x
-        self._align_to_y = align_y
+    def set_align_to(self, align_to: Alignment):
+        self._align_to = align_to
 
 
     @widget_dirty
@@ -102,10 +98,8 @@ class Widget():
     def calc_draw_pos(
         offset: list,
         size: list,
-        align_x: AlignX,
-        align_y: AlignY,
-        align_to_x: AlignX,
-        align_to_y: AlignY,
+        align: Alignment,
+        align_to: Alignment,
         parent: any) -> float:
         """Widgets are drawn from middle center. Alignment is relative to the hierachy and size:
         ┌──────────────────┐
@@ -121,31 +115,31 @@ class Widget():
         draw_pos = offset
 
         # Self alignment X
-        if align_x == AlignX.Centre:
+        if align.x == AlignX.Left:
+            draw_pos[0] += size[0] * 0.5
+        elif align.x == AlignX.Right:
             draw_pos[0] -= size[0] * 0.5
-        elif align_x == AlignX.Right:
-            draw_pos[0] -= size[0]
 
         # Self alignment Y
-        if align_y == AlignY.Middle:
+        if align.y == AlignY.Top:
+            draw_pos[1] -= size[1] * 0.5
+        elif align.y == AlignY.Bottom:
             draw_pos[1] += size[1] * 0.5
-        elif align_y == AlignY.Bottom:
-            draw_pos[1] += size[1]
     
         if parent is not None:
             draw_pos += parent._draw_pos
 
             # Alignment to parent X
-            if align_to_x == AlignX.Centre:
+            if align_to.x == AlignX.Left:
                 draw_pos[0] += parent._size[0] * 0.5
-            elif align_to_x == AlignX.Right:
-                draw_pos[0] += parent._size[0]
+            elif align_to.x == AlignX.Right:
+                draw_pos[0] -= parent._size[0] * 0.5
 
             # Alignment to parent Y
-            if align_to_y == AlignY.Middle:
+            if align_to.y == AlignY.Top:
                 draw_pos[1] -= parent._size[1] * 0.5
-            elif align_to_y == AlignY.Bottom:
-                draw_pos[1] -= parent._size[1]
+            elif align_to.y == AlignY.Bottom:
+                draw_pos[1] += parent._size[1] * 0.5
 
         return draw_pos
 
@@ -154,7 +148,8 @@ class Widget():
         """Print config to stdout for use with Gui editor"""
         print(f"offset = [{self._offset[0]:.2f}, {self._offset[1]:.2f}]")
         print(f"size = [{self._size[0]:.2f}, {self._size[1]:.2f}]")
-        print(f"align = [{self._align_x}, {self._align_y}]")
+        print(f"align = [{self._align.x}, {self._align.y}]")
+        print(f"align_to = [{self._align_to.x}, {self._align_to.y}]")
         print("")
 
         for widget in self._children:

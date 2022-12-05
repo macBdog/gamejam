@@ -42,7 +42,7 @@ class Gui(Widget):
         self.debug_dirty = False
         self.debug_hover = None
         self.debug_selected = None
-        self.debug_size_offset = [0.0] * Gui.NUM_DEBUG_WIDGETS * 4
+        self.debug_size_pos = [0.0] * Gui.NUM_DEBUG_WIDGETS * 4
         self.debug_align = [0] * Gui.NUM_DEBUG_WIDGETS
         self.cursor = None
 
@@ -58,7 +58,7 @@ class Gui(Widget):
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
         self.debug_selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
-        self.debug_size_offset_id = glGetUniformLocation(self.shader, "WidgetSizeOffset")
+        self.debug_size_pos_id = glGetUniformLocation(self.shader, "WidgetSizePosition")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
 
         self.set_size([2.0, 2.0])
@@ -131,11 +131,11 @@ class Gui(Widget):
         self.active_input = do_input
 
 
-    def add_create_widget(self, sprite: SpriteTexture, font:Font=None) -> Widget:
+    def add_create_widget(self, sprite: SpriteTexture, name:str="", font:Font=None) -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
-
-        widget = Widget(sprite, font)
+        widget = Widget(name=name, font=font)
+        widget.set_sprite(sprite)
         self.add_child(widget)
         return widget
 
@@ -210,7 +210,7 @@ class Gui(Widget):
             glUniform1f(self.display_ratio_id, self.display_ratio)
             glUniform1i(self.debug_selected_id, selected_widget_id)
             glUniform1i(self.debug_hover_id, hover_widget_id)
-            glUniform4fv(self.debug_size_offset_id, Gui.NUM_DEBUG_WIDGETS, self.debug_size_offset)
+            glUniform4fv(self.debug_size_pos_id, Gui.NUM_DEBUG_WIDGETS, self.debug_size_pos)
             glUniform1iv(self.debug_align_id, Gui.NUM_DEBUG_WIDGETS, self.debug_align)
 
         child_widgets = self._children
@@ -223,12 +223,12 @@ class Gui(Widget):
                     selected_widget_id = i
                 if widget == self.debug_hover:
                     hover_widget_id = i
-                so_index = debug_widget_index * 4
-                self.debug_size_offset[so_index + 0] = widget._size[0]
-                self.debug_size_offset[so_index + 1] = widget._size[1]
-                self.debug_size_offset[so_index + 2] = widget._offset[0]
-                self.debug_size_offset[so_index + 3] = widget._offset[1]
-                self.debug_align[debug_widget_index] = (widget._align_x.value * 10) + widget._align_y.value
+                sp_index = debug_widget_index * 4
+                self.debug_size_pos[sp_index + 0] = widget._size[0]
+                self.debug_size_pos[sp_index + 1] = widget._size[1]
+                self.debug_size_pos[sp_index + 2] = widget._draw_pos[0]
+                self.debug_size_pos[sp_index + 3] = widget._draw_pos[1]
+                self.debug_align[debug_widget_index] = (widget._align.x.value * 10) + widget._align.y.value
                 debug_widget_index += 1
                 if debug_widget_index >= Gui.NUM_DEBUG_WIDGETS:
                     break

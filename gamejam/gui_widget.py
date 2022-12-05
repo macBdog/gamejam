@@ -5,7 +5,7 @@ from gamejam.graphics import Shader
 from gamejam.texture import SpriteTexture
 from gamejam.cursor import Cursor
 from gamejam.font import Font
-from gamejam.widget import Widget, AlignX, AlignY
+from gamejam.widget import Widget, Alignment, AlignX, AlignY
 
 
 class TouchState(enum.Enum):
@@ -21,10 +21,10 @@ class GuiWidget(Widget):
         Base class can display and animate alpha, width, height. 
         Child classes are expected to handle input and other functionality."""
 
-    def __init__(self, sprite: SpriteTexture, font:Font=None):
-        super().__init__()
-        self.sprite = sprite
-        self._parent = None
+    def __init__(self, name: str="", font: Font=None):
+        super().__init__(name=name)
+        self.sprite = None
+        self.sprite_stretch = False
         self.hover = False
         self.hover_begin = None
         self.hover_end = None
@@ -33,33 +33,45 @@ class GuiWidget(Widget):
         self.colour_func = None
         self.colour_kwargs = None
         self.actioned = False
-        self.alpha_start = self.sprite.colour[3] if self.sprite is not None else 1.0
+        self.alpha_start = 1.0 
         self.alpha_hover = -0.25
         self.font = font
         self.text = ""
         self.text_size = 0
-        self.text_alignX = AlignX.Centre
-        self.text_alignY = AlignY.Middle
+        self.text_align = Alignment(AlignX.Centre, AlignY.Middle)
         self.text_offset = [0.0, 0.0]
         self.text_col = [1.0, 1.0, 1.0, 1.0]
         self.animation = None
+
+
+    def set_sprite(self, sprite: SpriteTexture, stretch:bool=False):
+        """The widget now controls the sprite's position."""
+        self.sprite = sprite
+        self.sprite_stretch = stretch
+        self.alpha_start = self.sprite.colour[3]
+        self.sprite.size = self._size
+        self.sprite.pos = self._draw_pos
 
 
     def hover_begin_default(self):
         if self.sprite is not None:
             self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
+        self.text_col[3] = self.alpha_start + self.alpha_hover
+
 
     def hover_end_default(self):
         if self.sprite is not None:
             self.sprite.set_alpha(self.alpha_start)
 
+        self.text_col[3] = self.alpha_start
 
-    def set_text(self, text: str, size:int, offset=None, align_x=AlignX.Centre, align_y=AlignY.Middle):
+
+    def set_text(self, text: str, size:int, offset=None, align:Alignment=None):
         self.text = text
         self.text_size = size
-        self.text_alignX = align_x
-        self.text_alignY = align_y
+        if align is not None:
+            self.text_align = align
         if offset is not None:
             self.text_offset = offset
 
@@ -69,7 +81,7 @@ class GuiWidget(Widget):
 
 
     def set_colour_func(self, colour_func, colour_kwargs=None):
-        """ Set a function that determines the colour of a button."""
+        """ Set a function that determines the colour of a gui widget."""
         self.colour_func = colour_func
         self.colour_kwargs = colour_kwargs
 
@@ -111,15 +123,12 @@ class GuiWidget(Widget):
         self.animation.reset(anim_type, time)
         return self.animation
 
+
     def touch(self, mouse: Cursor) -> TouchState:
         """Test for activation and hover states."""
         state = TouchState.Clear
-        touch_pos = self._offset
+        touch_pos = self._draw_pos
         touch_size = self._size
-
-        if self.sprite is not None: # this could be removed now that Widget constructor sets size from sprite?
-            touch_pos = self.sprite.pos
-            touch_size = self.sprite.size
 
         size_half = [abs(i * 0.5) for i in touch_size]
         inside = (  mouse.pos[0] >= touch_pos[0] - size_half[0] and
@@ -167,6 +176,11 @@ class GuiWidget(Widget):
             # Apply any colour changes defined by user funcs
             if self.colour_func is not None:
                 self.sprite.set_colour(self.colour_func(**self.colour_kwargs))
+
+            self.sprite.pos = self._draw_pos
+            
+            if self.sprite_stretch:
+                self.sprite.size = self._size
 
             self.sprite.draw()
 

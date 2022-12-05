@@ -11,7 +11,7 @@
     
 #ifdef shadertoy
 #define NUM_DEBUG_WIDGETS 128
-vec4 WidgetSizeOffset[NUM_DEBUG_WIDGETS];
+vec4 WidgetSizePosition[NUM_DEBUG_WIDGETS];
 int WidgetAlign[NUM_DEBUG_WIDGETS];
 int WidgetHoverId;
 int WidgetSelectedId;
@@ -23,7 +23,7 @@ uniform vec4 Colour;
 uniform float DisplayRatio;
 uniform int WidgetHoverId;
 uniform int WidgetSelectedId;
-uniform vec4 WidgetSizeOffset[NUM_DEBUG_WIDGETS];
+uniform vec4 WidgetSizePosition[NUM_DEBUG_WIDGETS];
 uniform int WidgetAlign[NUM_DEBUG_WIDGETS];
 #endif
 
@@ -67,13 +67,13 @@ float drawLineSquare(in vec2 uv, in vec2 start, in vec2 end, in float width, boo
     return clamp(col, 0.0, 1.0);
 }
 
-vec4 drawWidget(in float ratio, in vec2 uv, in vec2 anchor, in vec2 size, in vec2 offset, int align_x, int align_y, int anchor_x, int anchor_y)
+vec4 drawWidget(in float ratio, in vec2 uv, in vec2 anchor, in vec2 size, in vec2 pos, int align_x, int align_y, int anchor_x, int anchor_y)
 {
     vec4 col = vec4(0.0);
     vec2 thickness = vec2(line_width, line_width / ratio);
     
     // Outline in white
-    vec2 shader_pos = ((anchor + offset) + 1.0) * 0.5;
+    vec2 shader_pos = ((anchor + pos) + 1.0) * 0.5;
 #ifndef shadertoy
     shader_pos.y = 1.0 - shader_pos.y;
     size *= 0.5;
@@ -110,7 +110,7 @@ vec4 drawWidgets(in float ratio, in vec2 uv)
         int align_y = WidgetAlign[i] - align_x;
         if (align_x > 0)
         {
-            vec4 widget = drawWidget(ratio, uv, vec2(0.0, 0.0), WidgetSizeOffset[i].xy, WidgetSizeOffset[i].zw, align_x, align_y, 0, 0);
+            vec4 widget = drawWidget(ratio, uv, vec2(0.0, 0.0), WidgetSizePosition[i].xy, WidgetSizePosition[i].zw, align_x, align_y, 0, 0);
             widget.a = i == WidgetSelectedId ? 1.0 : i == WidgetHoverId ? 0.75 : 0.5;
             col = max(col, widget);
         }
@@ -135,7 +135,7 @@ void main()
     vec4 bg = texture(iChannel0, uv);
     
     int w_id = 0;
-    WidgetSizeOffset[w_id] = vec4(0.35, 0.55, 0.05, 0.075);
+    WidgetSizePosition[w_id] = vec4(0.35, 0.55, 0.05, 0.075);
     WidgetAlign[w_id] = 22;
     outColour = drawWidgets(DisplayRatio, uv);
     fragColor = mix(outColour, bg, 0.5);

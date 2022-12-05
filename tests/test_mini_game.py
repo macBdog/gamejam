@@ -46,11 +46,16 @@ class MiniGame(GameJam):
         self.guess_sprites = []
         for i in range(num_widgets):
             idx = i + 1
-            anim = AnimType(11 - i)
+            anim = AnimType(11 - i
+            
+            )
             widget_pos = [-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5)]
             
-            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], widget_pos, widget_size)
-            widget = GuiWidget(sprite, self.font)
+            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], widget_size)
+            widget = GuiWidget(name=f"Guess{idx}", font=self.font)
+            widget.set_size(widget_size)
+            widget.set_offset(widget_pos)
+            widget.set_sprite(sprite, stretch=True)
             
             widget.set_text(str(idx), 14, [0.0, 0.0])
             widget.set_action(MiniGame.guess_func, {"game": self, "num": idx})
@@ -70,8 +75,9 @@ class MiniGame(GameJam):
         game_draw, game_input = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
+            self.font.draw(f"+", 18, self.gui.cursor.pos, [1.0] * 4)
             self.font.draw(f"Guess the number.", 12, [-0.5, 0.7], [1.0, 1.0, 1.0, 1.0])
-            self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])  
+            self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])
             self.profile.end()
 
             self.profile.begin("dev_mode")
@@ -80,6 +86,7 @@ class MiniGame(GameJam):
                 self.font.draw(f"FPS: {math.floor(self.fps)}", 12, [0.65, 0.75], [0.81, 0.81, 0.81, 1.0])
                 self.font.draw(f"X: {math.floor(cursor_pos[0] * 100) / 100}\nY: {math.floor(cursor_pos[1] * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
             self.profile.end()
+
 
 
     def end(self):
