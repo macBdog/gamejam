@@ -24,14 +24,17 @@ class MiniGame(GameJam):
             self.score = 0
         self.magic_number = np.random.randint(1, 9 + 1)
 
+
     @staticmethod
     def guess_func(**kwargs):
         game = kwargs["game"]
         num = kwargs["num"]
         if num == game.magic_number:
             game.score += 10
+            game.particles.spawn(2.5, game.gui.cursor.pos, [0.1, 1.0, 0.1, 1.0])
         else:
             game.score -= 1
+            game.particles.spawn(0.55, game.gui.cursor.pos, [1.0, 0.1, 0.1, 1.0])
         MiniGame.reset(game, reset_score=False)
 
 

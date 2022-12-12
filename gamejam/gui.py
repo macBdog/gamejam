@@ -9,6 +9,7 @@ from gamejam.graphics import Graphics, Shader, ShaderType
 from gamejam.settings import GameSettings
 from gamejam.texture import SpriteTexture, Texture
 from gamejam.widget import Widget
+from gamejam.gui_widget import GuiWidget
 
 from OpenGL.GL import (
     glGetUniformLocation,
@@ -76,7 +77,7 @@ class Gui(Widget):
     def add_new_widget(**kwargs):
         gui = kwargs["gui"]
         if GameSettings.GUI_MODE:
-            gui.add_create_widget(None)
+            gui.add_create_widget()
 
 
     @staticmethod
@@ -134,8 +135,14 @@ class Gui(Widget):
     def add_create_widget(self, sprite: SpriteTexture, name:str="", font:Font=None) -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
-        widget = Widget(name=name, font=font)
+        widget = GuiWidget(name=name, font=font)
         widget.set_sprite(sprite)
+        self.add_child(widget)
+        return widget
+
+
+    def add_create_widget(self, name:str="", font:Font=None) -> Widget:
+        widget = GuiWidget(name=name, font=font)
         self.add_child(widget)
         return widget
 
@@ -176,11 +183,11 @@ class Gui(Widget):
         for i, child in enumerate(self._children):
             touch_state = child.touch(mouse)
             if touch_state == TouchState.Hover:
-                self.debug_hover = i
+                self.debug_hover = child
 
             if self.debug_selected is None:
                 if touch_state == TouchState.Touched:
-                    self.debug_selected = i
+                    self.debug_selected = child
                     break
             else:
                 if touch_state == TouchState.Touched:
