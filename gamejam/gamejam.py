@@ -13,7 +13,7 @@ from OpenGL.GL import (
     GL_BLEND, GL_SMOOTH, GL_DEPTH_TEST, GL_LEQUAL,
     GL_TRUE
 )
-
+from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics
 from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
 from gamejam.texture import TextureManager
@@ -122,9 +122,9 @@ class GameJam:
             self.profile.begin("dev_stats")
             if GameSettings.DEV_MODE or GameSettings.GUI_MODE:
                 cursor_pos = self.input.cursor.pos
-                self.font.draw("^", 8, [cursor_pos[0] - 0.01, cursor_pos[1] - 0.03], [1.0] * 4)
-                self.font.draw(f"FPS: {math.floor(self.fps)}", 12, [0.65, 0.75], [0.81, 0.81, 0.81, 1.0])
-                self.font.draw(f"X: {math.floor(cursor_pos[0] * 100) / 100}\nY: {math.floor(cursor_pos[1] * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
+                self.font.draw("^", 8, cursor_pos - Coord2d(0.01, 0.03), [1.0] * 4)
+                self.font.draw(f"FPS: {math.floor(self.fps)}", 12, Coord2d(0.65, 0.75), [0.81, 0.81, 0.81, 1.0])
+                self.font.draw(f"X: {math.floor(cursor_pos.x * 100) / 100}\nY: {math.floor(cursor_pos.y * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
             self.profile.end()
 
             self.profile.begin("particles")

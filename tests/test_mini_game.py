@@ -5,6 +5,7 @@ import time
 import sys
 
 from gamejam.animation import AnimType
+from gamejam.coord import Coord2d
 from gamejam.gui_widget import GuiWidget
 from gamejam.input import InputActionKey, InputActionModifier
 from gamejam.settings import GameSettings
@@ -31,10 +32,10 @@ class MiniGame(GameJam):
         num = kwargs["num"]
         if num == game.magic_number:
             game.score += 10
-            game.particles.spawn(2.5, game.gui.cursor.pos, [0.1, 1.0, 0.1, 1.0])
+            game.particles.spawn(2.5, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [0.1, 1.0, 0.1, 1.0])
         else:
             game.score -= 1
-            game.particles.spawn(0.55, game.gui.cursor.pos, [1.0, 0.1, 0.1, 1.0])
+            game.particles.spawn(0.55, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [1.0, 0.1, 0.1, 1.0])
         MiniGame.reset(game, reset_score=False)
 
 
@@ -44,23 +45,21 @@ class MiniGame(GameJam):
         # Make ten guessing buttons each with a different animation effect
         num_widgets = 10
         widget_dimension = 0.35
-        widget_size = [widget_dimension * self.graphics.display_ratio, widget_dimension]
+        widget_size = Coord2d(widget_dimension * self.graphics.display_ratio, widget_dimension)
         self.guess_widgets = []
         self.guess_sprites = []
         for i in range(num_widgets):
             idx = i + 1
-            anim = AnimType(11 - i
+            anim = AnimType(11 - i)
+            widget_pos = Coord2d(-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5))
             
-            )
-            widget_pos = [-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5)]
-            
-            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], widget_size)
+            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], Coord2d(0.0, 0.0), Coord2d(widget_size.x, widget_size.y))
             widget = GuiWidget(name=f"Guess{idx}", font=self.font)
             widget.set_size(widget_size)
             widget.set_offset(widget_pos)
             widget.set_sprite(sprite, stretch=True)
             
-            widget.set_text(str(idx), 14, [0.0, 0.0])
+            widget.set_text(str(idx), 14, Coord2d(0.0, 0.0))
             widget.set_action(MiniGame.guess_func, {"game": self, "num": idx})
             widget.animate(anim)
             self.gui.add_child(widget)
@@ -79,15 +78,15 @@ class MiniGame(GameJam):
         if game_draw:
             self.profile.begin("game_loop")
             self.font.draw(f"+", 18, self.gui.cursor.pos, [1.0] * 4)
-            self.font.draw(f"Guess the number.", 12, [-0.5, 0.7], [1.0, 1.0, 1.0, 1.0])
-            self.font.draw(f"Your score: {self.score}", 10, [-0.5, -0.5], [1.0, 1.0, 1.0, 1.0])
+            self.font.draw(f"Guess the number.", 12, Coord2d(-0.5, 0.7), [1.0, 1.0, 1.0, 1.0])
+            self.font.draw(f"Your score: {self.score}", 10, Coord2d(-0.5, -0.5), [1.0, 1.0, 1.0, 1.0])
             self.profile.end()
 
             self.profile.begin("dev_mode")
             if GameSettings.DEV_MODE:
                 cursor_pos = self.input.cursor.pos
-                self.font.draw(f"FPS: {math.floor(self.fps)}", 12, [0.65, 0.75], [0.81, 0.81, 0.81, 1.0])
-                self.font.draw(f"X: {math.floor(cursor_pos[0] * 100) / 100}\nY: {math.floor(cursor_pos[1] * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
+                self.font.draw(f"FPS: {math.floor(self.fps)}", 12, Coord2d(0.65, 0.75), [0.81, 0.81, 0.81, 1.0])
+                self.font.draw(f"X: {math.floor(cursor_pos.x * 100) / 100}\nY: {math.floor(cursor_pos.x * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
             self.profile.end()
 
 

@@ -1,3 +1,4 @@
+from copy import copy
 import glfw
 import numpy as np
 from freetype import Face, ctypes
@@ -27,6 +28,7 @@ from OpenGL.GL import (
 
 from gamejam.graphics import Graphics, Shader
 from gamejam.settings import GameSettings
+from gamejam.coord import Coord2d
 
 class Font():
     def blit(self, dest, src, loc):
@@ -163,7 +165,7 @@ class Font():
         self.pos_id = glGetUniformLocation(shader_font, "Position")
         self.size_id = glGetUniformLocation(shader_font, "Size")
 
-    def draw(self, string: str, font_size: int, pos: list, colour: list):
+    def draw(self, string: str, font_size: int, pos: Coord2d, colour: list):
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
         shader_font = self.graphics.get_program(Shader.FONT)
         glUseProgram(shader_font)
@@ -171,7 +173,7 @@ class Font():
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         glBindVertexArray(self.VAO)
-        draw_pos, display_size = pos, font_size * 0.0000005
+        draw_pos, display_size = copy(pos), font_size * 0.0000005
 
         for i in range(len(string)):
             c = ord(string[i])
@@ -179,9 +181,10 @@ class Font():
             # Special case for unsupported or whitespace characters
             if c not in self.sizes:
                 if c == 13 or c == 10:
-                    draw_pos = (pos[0], pos[1] - self.line_height * display_size)
+                    draw_pos.x = pos.x
+                    draw_pos.y = pos.y - self.line_height * display_size
                 else:
-                    draw_pos = (draw_pos[0] + (self.advance[32] * display_size) / self.window_ratio, draw_pos[1])
+                    draw_pos.x = draw_pos.x + (self.advance[32] * display_size) / self.window_ratio
                 continue
 
             # Size and position in texture
@@ -191,7 +194,7 @@ class Font():
             offset = self.offsets[c]
             bearing = ((self.bearings[c][0] * display_size) / self.window_ratio, self.bearings[c][1] * display_size)
             char_size = (offset[0] * display_size, offset[1] * display_size)
-            char_pos = (draw_pos[0] + bearing[0] + (char_size[0] * 0.5), draw_pos[1] + bearing[1] - (char_size[1] * 0.5))
+            char_pos = (draw_pos.x + bearing[0] + (char_size[0] * 0.5), draw_pos.y + bearing[1] - (char_size[1] * 0.5))
 
             glUniform4f(self.colour_id, colour[0], colour[1], colour[2], colour[3])
             glUniform2f(self.pos_id, char_pos[0], char_pos[1])
@@ -200,4 +203,4 @@ class Font():
             glUniform2f(self.char_size_id, tex_size[0], tex_size[1])
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
-            draw_pos = (draw_pos[0] + ((self.advance[c] * display_size) / self.window_ratio), draw_pos[1])
+            draw_pos.x = draw_pos.x + ((self.advance[c] * display_size) / self.window_ratio) 

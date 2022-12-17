@@ -2,6 +2,7 @@ from enum import Enum
 
 from gamejam.gui_widget import TouchState
 from gamejam.texture import SpriteTexture
+from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
 from gamejam.font import Font
 from gamejam.input import Input, InputActionKey, InputActionModifier
@@ -54,7 +55,7 @@ class Gui(Widget):
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), debug_shader)
         
         self.texture = Texture("")
-        self.debug_sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], [0.0, 0.0], [2.0, 2.0], self.shader)
+        self.debug_sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], Coord2d(0.0, 0.0), Coord2d(2.0, 2.0), self.shader)
 
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
@@ -62,7 +63,7 @@ class Gui(Widget):
         self.debug_size_pos_id = glGetUniformLocation(self.shader, "WidgetSizePosition")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
 
-        self.set_size([2.0, 2.0])
+        self.set_size(Coord2d(2.0, 2.0))
 
 
     @staticmethod
@@ -132,17 +133,22 @@ class Gui(Widget):
         self.active_input = do_input
 
 
-    def add_create_widget(self, sprite: SpriteTexture, name:str="", font:Font=None) -> Widget:
+    def add_create_widget(self, sprite:SpriteTexture=None, font:Font=None, name:str="") -> Widget:
         """Add to the list of widgets to draw for this gui collection
         :param sprite: The underlying sprite OpenGL object that is updated when the widget is drawn."""
         widget = GuiWidget(name=name, font=font)
-        widget.set_sprite(sprite)
+        if sprite is not None:
+            widget.set_sprite(sprite)
+            widget.set_size(Coord2d(sprite.size[0], sprite.size[1]))
+            widget.set_offset(Coord2d(sprite.pos[0], sprite.pos[1]))
         self.add_child(widget)
         return widget
 
 
-    def add_create_widget(self, name:str="", font:Font=None) -> Widget:
+    def add_create_text_widget(self, font:Font, text:str, size:int, offset:Coord2d=None, name:str="") -> Widget:
         widget = GuiWidget(name=name, font=font)
+        widget.set_size(Coord2d(0.25, 0.1))
+        widget.set_text(text, size, offset)
         self.add_child(widget)
         return widget
 
@@ -169,10 +175,7 @@ class Gui(Widget):
             if self.debug_edit_start_pos is None:
                 self.debug_edit_start_pos = self.cursor.pos
             else:
-                edit_diff = [
-                    mouse.pos[0] - self.debug_edit_start_pos[0],
-                    mouse.pos[1] - self.debug_edit_start_pos[1],
-                ]
+                edit_diff = mouse.pos - self.debug_edit_start_pos
                 if self.debug_edit_mode is GuiEditMode.OFFSET:
                     self.debug_selected.set_offset(edit_diff)
                 elif self.debug_edit_mode is GuiEditMode.SIZE:
@@ -231,10 +234,10 @@ class Gui(Widget):
                 if widget == self.debug_hover:
                     hover_widget_id = i
                 sp_index = debug_widget_index * 4
-                self.debug_size_pos[sp_index + 0] = widget._size[0]
-                self.debug_size_pos[sp_index + 1] = widget._size[1]
-                self.debug_size_pos[sp_index + 2] = widget._draw_pos[0]
-                self.debug_size_pos[sp_index + 3] = widget._draw_pos[1]
+                self.debug_size_pos[sp_index + 0] = widget._size.x
+                self.debug_size_pos[sp_index + 1] = widget._size.y
+                self.debug_size_pos[sp_index + 2] = widget._draw_pos.x
+                self.debug_size_pos[sp_index + 3] = widget._draw_pos.y
                 self.debug_align[debug_widget_index] = (widget._align.x.value * 10) + widget._align.y.value
                 debug_widget_index += 1
                 if debug_widget_index >= Gui.NUM_DEBUG_WIDGETS:

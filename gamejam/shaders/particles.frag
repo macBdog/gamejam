@@ -9,6 +9,7 @@ uniform float DisplayRatio;
 uniform float Emitters[NUM_PARTICLE_EMITTERS];
 uniform vec2 EmitterPositions[NUM_PARTICLE_EMITTERS];
 uniform vec3 EmitterColours[NUM_PARTICLE_EMITTERS];
+vec2 EmitterAttractors[NUM_PARTICLE_EMITTERS];
 
 #define num_particles 32
 #define grav -0.01
@@ -53,12 +54,17 @@ void main()
         start_pos.y = 1.0 - start_pos.y;
         start_pos.y *= DisplayRatio;
         vec3 col = EmitterColours[e];
+        vec2 AttractorPos = EmitterAttractors[e];
 
         for (int i = 0; i < num_particles; ++i)
         {
             float c = (((float(i) / float(num_particles)) + 1.0) * 0.25) + (sin(float(e) / float(NUM_PARTICLE_EMITTERS)));
             vec2 rdir = noise(vec2(sin(c), cos(c))) * 0.2;
             vec2 pos = getPos(start_pos, 1.0 - life, rdir);
+            if (AttractorPos.x > -1.0 && AttractorPos.x < 1.0)
+            {
+                pos = mix(pos, AttractorPos, clamp(exp((1.0 - life) * 4.6 + rdir.x + rdir.y) / 100.0, 0.0, 1.0));
+            }
             screen_col += drawParticle(uv - pos, psize * life, vec4(col.xyz, life));
         }
     }

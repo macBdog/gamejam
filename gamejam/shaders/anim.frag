@@ -110,7 +110,8 @@ void main()
     }
     if (hasEffect(Type, at_fill_radial))
     {
-        float theta = TAU / (Frac * Mag);
+        float thalf = ((Frac * Mag) * 0.5) + 0.5;
+        float theta = (TAU / thalf) + PI;
         vec2 ruv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 0.5);
         float a = atan(ruv.x, ruv.y);
         float b = TAU * 2.0 - atan(ruv.x, ruv.y);

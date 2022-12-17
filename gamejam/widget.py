@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 import functools
+from gamejam.coord import Coord2d
 
 
 class AlignX(Enum):
@@ -33,11 +34,11 @@ class Widget():
     def __init__(self, name: str=""):
         # Draw pos automatically gets refreshed when the dirty flag is set
         self._dirty = True
-        self._draw_pos = [0.0, 0.0]
+        self._draw_pos = Coord2d()
         self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
         
-        self._offset = [0.0, 0.0]
-        self._size = [0.1, 0.1]
+        self._offset = Coord2d()
+        self._size = Coord2d(0.1, 0.1)
 
         # Where this widget is drawn relative to it's parent anchor
         self._align = Alignment(AlignX.Centre, AlignY.Middle)
@@ -69,12 +70,12 @@ class Widget():
 
 
     @widget_dirty
-    def set_offset(self, offset: list):
+    def set_offset(self, offset: Coord2d):
         self._offset = offset
 
 
     @widget_dirty
-    def set_size(self, size: list):
+    def set_size(self, size: Coord2d):
         self._size = size
 
 
@@ -96,11 +97,11 @@ class Widget():
 
     @staticmethod
     def calc_draw_pos(
-        offset: list,
-        size: list,
+        offset: Coord2d,
+        size: Coord2d,
         align: Alignment,
         align_to: Alignment,
-        parent: any) -> float:
+        parent: any) -> Coord2d:
         """Widgets are drawn from middle center. Alignment is relative to the hierachy and size:
         ┌──────────────────┐
         │TopLeft           │
@@ -116,38 +117,38 @@ class Widget():
 
         # Self alignment X
         if align.x == AlignX.Left:
-            draw_pos[0] += size[0] * 0.5
+            draw_pos.x += size.x * 0.5
         elif align.x == AlignX.Right:
-            draw_pos[0] -= size[0] * 0.5
+            draw_pos.x -= size.x * 0.5
 
         # Self alignment Y
         if align.y == AlignY.Top:
-            draw_pos[1] -= size[1] * 0.5
+            draw_pos.y -= size.y * 0.5
         elif align.y == AlignY.Bottom:
-            draw_pos[1] += size[1] * 0.5
+            draw_pos.y += size.y * 0.5
     
         if parent is not None:
             draw_pos += parent._draw_pos
 
             # Alignment to parent X
             if align_to.x == AlignX.Left:
-                draw_pos[0] += parent._size[0] * 0.5
+                draw_pos.x += parent._size.x * 0.5
             elif align_to.x == AlignX.Right:
-                draw_pos[0] -= parent._size[0] * 0.5
+                draw_pos.x -= parent._size.x * 0.5
 
             # Alignment to parent Y
             if align_to.y == AlignY.Top:
-                draw_pos[1] -= parent._size[1] * 0.5
+                draw_pos.y -= parent._size.y * 0.5
             elif align_to.y == AlignY.Bottom:
-                draw_pos[1] += parent._size[1] * 0.5
+                draw_pos.y += parent._size.y * 0.5
 
         return draw_pos
 
 
     def dump(self):
         """Print config to stdout for use with Gui editor"""
-        print(f"offset = [{self._offset[0]:.2f}, {self._offset[1]:.2f}]")
-        print(f"size = [{self._size[0]:.2f}, {self._size[1]:.2f}]")
+        print(f"offset = [{self._offset.x:.2f}, {self._offset.y:.2f}]")
+        print(f"size = [{self._size.x:.2f}, {self._size.y:.2f}]")
         print(f"align = [{self._align.x}, {self._align.y}]")
         print(f"align_to = [{self._align_to.x}, {self._align_to.y}]")
         print("")

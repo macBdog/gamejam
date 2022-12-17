@@ -1,6 +1,7 @@
 import glfw
 from enum import Enum
 
+from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
 from gamejam.settings import GameSettings
 from gamejam.quickmaff import clamp
@@ -69,7 +70,7 @@ class Input:
         window_size = glfw.get_framebuffer_size(window)
         xpos = clamp(xpos, 0.0, window_size[0])
         ypos = clamp(ypos, 0.0, window_size[1])
-        self.cursor.pos = [((xpos / window_size[0]) * 2.0) - 1.0, ((ypos / window_size[1]) * -2.0) + 1.0]
+        self.cursor.pos = Coord2d(((xpos / window_size[0]) * 2.0) - 1.0, ((ypos / window_size[1]) * -2.0) + 1.0)
 
 
     def handle_scroll_update(self, window, xpos, ypos):

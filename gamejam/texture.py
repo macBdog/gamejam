@@ -3,6 +3,7 @@ import os.path
 from PIL import Image
 import numpy
 
+from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics, Shader
 
 
@@ -46,7 +47,7 @@ class Texture:
 
 
 class Sprite:
-    def __init__(self, graphics: Graphics, colour: list, pos: list, size: list):
+    def __init__(self, graphics: Graphics, colour: list, pos: Coord2d, size: Coord2d):
         self.graphics = graphics
         self.pos = pos
         self.colour = colour[:]
@@ -60,7 +61,7 @@ class Sprite:
 
 
 class SpriteShape(Sprite):
-    def __init__(self, graphics: Graphics, colour: list, pos: list, size: list, shader=None):
+    def __init__(self, graphics: Graphics, colour: list, pos: Coord2d, size: Coord2d, shader=None):
         Sprite.__init__(self, graphics, colour, pos, size)
 
         # Create array object
@@ -94,8 +95,8 @@ class SpriteShape(Sprite):
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)
         glUniform4f(self.colour_id, self.colour[0], self.colour[1], self.colour[2], self.colour[3])
-        glUniform2f(self.pos_id, self.pos[0], self.pos[1])
-        glUniform2f(self.size_id, self.size[0], self.size[1])
+        glUniform2f(self.pos_id, self.pos.x, self.pos.y)
+        glUniform2f(self.size_id, self.size.x, self.size.y)
         if custom_uniforms_func is not None:
             custom_uniforms_func()
         glBindVertexArray(self.VAO)
@@ -103,7 +104,7 @@ class SpriteShape(Sprite):
 
 
 class SpriteTexture(Sprite):
-    def __init__(self, graphics: Graphics, tex: Texture, colour: list, pos: list, size: list, shader=None):
+    def __init__(self, graphics: Graphics, tex: Texture, colour: list, pos: Coord2d, size: Coord2d, shader=None):
         Sprite.__init__(self, graphics, colour, pos, size)
         self.texture = tex
         self.bind(shader)
@@ -145,8 +146,8 @@ class SpriteTexture(Sprite):
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)
         glUniform4f(self.colour_id, self.colour[0], self.colour[1], self.colour[2], self.colour[3])
-        glUniform2f(self.pos_id, self.pos[0], self.pos[1])
-        glUniform2f(self.size_id, self.size[0], self.size[1])
+        glUniform2f(self.pos_id, self.pos.x, self.pos.y)
+        glUniform2f(self.size_id, self.size.x, self.size.y)
         if custom_uniforms_func is not None:
             custom_uniforms_func()
         glActiveTexture(GL_TEXTURE0)
@@ -175,11 +176,11 @@ class TextureManager:
             self.textures[texture_name] = new_texture
             return new_texture
 
-    def create_sprite_shape(self, colour: list, position: list, size: list, shader=None, wrap:bool=True):
-        return SpriteShape(self.graphics, colour, position, size, shader)
+    def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteShape(self.graphics, colour, pos, size, shader)
 
-    def create_sprite_texture(self, texture_name: str, position: list, size: list, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], position, size, shader)
+    def create_sprite_texture(self, texture_name: str, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], pos, size, shader)
 
-    def create_sprite_texture_tinted(self, texture_name: str, colour: list, position: list, size: list, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), colour, position, size, shader)
+    def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), colour, pos, size, shader)

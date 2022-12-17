@@ -3,6 +3,7 @@ import enum
 from gamejam.animation import AnimType, Animation
 from gamejam.graphics import Shader
 from gamejam.texture import SpriteTexture
+from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
 from gamejam.font import Font
 from gamejam.widget import Widget, Alignment, AlignX, AlignY
@@ -39,7 +40,7 @@ class GuiWidget(Widget):
         self.text = ""
         self.text_size = 0
         self.text_align = Alignment(AlignX.Centre, AlignY.Middle)
-        self.text_offset = [0.0, 0.0]
+        self.text_offset = Coord2d()
         self.text_col = [1.0, 1.0, 1.0, 1.0]
         self.animation = None
 
@@ -49,8 +50,9 @@ class GuiWidget(Widget):
         self.sprite = sprite
         self.sprite_stretch = stretch
         self.alpha_start = self.sprite.colour[3]
-        self.sprite.size = self._size
-        self.sprite.pos = self._draw_pos
+        if stretch:
+            self.sprite.size = self._size
+            self.sprite.pos = self._draw_pos
 
 
     def hover_begin_default(self):
@@ -67,9 +69,9 @@ class GuiWidget(Widget):
         self.text_col[3] = self.alpha_start
 
 
-    def set_text(self, text: str, size:int, offset=None, align:Alignment=None):
+    def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None):
         self.text = text
-        self.text_size = size
+        self.text_size = text_size
         if align is not None:
             self.text_align = align
         if offset is not None:
@@ -130,11 +132,11 @@ class GuiWidget(Widget):
         touch_pos = self._draw_pos
         touch_size = self._size
 
-        size_half = [abs(i * 0.5) for i in touch_size]
-        inside = (  mouse.pos[0] >= touch_pos[0] - size_half[0] and
-                    mouse.pos[0] <= touch_pos[0] + size_half[0] and
-                    mouse.pos[1] >= touch_pos[1] - size_half[1] and
-                    mouse.pos[1] <= touch_pos[1] + size_half[1])
+        size_half = touch_size * 0.5
+        inside = (  mouse.pos.x >= touch_pos.x - size_half.x and
+                    mouse.pos.x <= touch_pos.x + size_half.x and
+                    mouse.pos.y >= touch_pos.y - size_half.y and
+                    mouse.pos.y <= touch_pos.y + size_half.y)
         if self.hover:
             if inside:
                 state = TouchState.Hover
@@ -185,11 +187,6 @@ class GuiWidget(Widget):
             self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            text_offset = self.text_offset[:]
-
-            if self.sprite is not None:
-                text_offset[0] += self.sprite.pos[0]
-                text_offset[1] += self.sprite.pos[1]
-                
+            text_offset = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)                
             self.font.draw(self.text, self.text_size, text_offset, self.text_col)
 
