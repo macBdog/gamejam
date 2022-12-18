@@ -53,13 +53,13 @@ class MiniGame(GameJam):
             anim = AnimType(11 - i)
             widget_pos = Coord2d(-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5))
             
-            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], Coord2d(0.0, 0.0), Coord2d(widget_size.x, widget_size.y))
+            sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], Coord2d(), Coord2d(widget_size.x, widget_size.y))
             widget = GuiWidget(name=f"Guess{idx}", font=self.font)
             widget.set_size(widget_size)
             widget.set_offset(widget_pos)
             widget.set_sprite(sprite, stretch=True)
             
-            widget.set_text(str(idx), 14, Coord2d(0.0, 0.0))
+            widget.set_text(str(idx), 14, Coord2d())
             widget.set_action(MiniGame.guess_func, {"game": self, "num": idx})
             widget.animate(anim)
             self.gui.add_child(widget)

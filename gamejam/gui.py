@@ -55,7 +55,7 @@ class Gui(Widget):
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), debug_shader)
         
         self.texture = Texture("")
-        self.debug_sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], Coord2d(0.0, 0.0), Coord2d(2.0, 2.0), self.shader)
+        self.debug_sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], Coord2d(), Coord2d(2.0, 2.0), self.shader)
 
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
@@ -139,8 +139,8 @@ class Gui(Widget):
         widget = GuiWidget(name=name, font=font)
         if sprite is not None:
             widget.set_sprite(sprite)
-            widget.set_size(Coord2d(sprite.size[0], sprite.size[1]))
-            widget.set_offset(Coord2d(sprite.pos[0], sprite.pos[1]))
+            widget.set_size(sprite.size)
+            widget.set_offset(sprite.pos)
         self.add_child(widget)
         return widget
 

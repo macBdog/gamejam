@@ -31,7 +31,7 @@ class Particles:
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE, ShaderType.VERTEX), particle_shader)
         
         self.texture = Texture("")
-        self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], Coord2d(0.0, 0.0), Coord2d(2.0, 2.0), self.shader)
+        self.sprite = SpriteTexture(graphics, self.texture, [1.0, 1.0, 1.0, 1.0], Coord2d(), Coord2d(2.0, 2.0), self.shader)
 
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.emitters_id = glGetUniformLocation(self.shader, "Emitters")
