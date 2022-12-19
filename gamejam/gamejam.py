@@ -112,7 +112,6 @@ class GameJam:
             self.profile.begin("gui")
             self.gui.touch(self.input.cursor)
             self.gui.draw(self.dt)
-            self.input.cursor.draw(self.dt)
             self.profile.end()
 
             self.profile.begin("game")
@@ -129,6 +128,10 @@ class GameJam:
 
             self.profile.begin("particles")
             self.particles.draw(self.dt)
+            self.profile.end()
+
+            self.profile.begin("cursor")
+            self.input.cursor.draw(self.dt)
             self.profile.end()
 
             glfw.swap_buffers(self.window)

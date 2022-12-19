@@ -9,7 +9,7 @@ uniform float DisplayRatio;
 uniform float Emitters[NUM_PARTICLE_EMITTERS];
 uniform vec2 EmitterPositions[NUM_PARTICLE_EMITTERS];
 uniform vec3 EmitterColours[NUM_PARTICLE_EMITTERS];
-vec2 EmitterAttractors[NUM_PARTICLE_EMITTERS];
+uniform vec2 EmitterAttractors[NUM_PARTICLE_EMITTERS];
 
 #define num_particles 32
 #define grav -0.01
@@ -41,6 +41,14 @@ vec4 drawParticle(in vec2 pos, in float size, in vec4 col)
     return mix(col, vec4(0.0), smoothstep(0.0, size, dot(pos, pos) * 90.0));
 }
 
+vec2 game_to_screen(in vec2 game_coord, in float ratio)
+{
+    vec2 screen_coord = (game_coord + vec2(1.0)) * vec2(0.5);
+    screen_coord.y = 1.0 - screen_coord.y;
+    screen_coord.y *= ratio;
+    return screen_coord;
+}
+
 void main() 
 {
     vec2 uv = OutTexCoord;
@@ -50,20 +58,17 @@ void main()
     for (int e = 0; e < NUM_PARTICLE_EMITTERS; ++e)
     {
         float life = max(Emitters[e], 0.0);
-        vec2 start_pos = (EmitterPositions[e] + vec2(1.0)) * vec2(0.5);
-        start_pos.y = 1.0 - start_pos.y;
-        start_pos.y *= DisplayRatio;
+        vec2 start_pos = game_to_screen(EmitterPositions[e], DisplayRatio);
         vec3 col = EmitterColours[e];
-        vec2 AttractorPos = EmitterAttractors[e];
-
         for (int i = 0; i < num_particles; ++i)
         {
             float c = (((float(i) / float(num_particles)) + 1.0) * 0.25) + (sin(float(e) / float(NUM_PARTICLE_EMITTERS)));
             vec2 rdir = noise(vec2(sin(c), cos(c))) * 0.2;
             vec2 pos = getPos(start_pos, 1.0 - life, rdir);
-            if (AttractorPos.x > -1.0 && AttractorPos.x < 1.0)
+            vec2 apos = game_to_screen(EmitterAttractors[e], DisplayRatio);
+            if (abs(apos.x) + abs(apos.y) <= 4.0)
             {
-                pos = mix(pos, AttractorPos, clamp(exp((1.0 - life) * 4.6 + rdir.x + rdir.y) / 100.0, 0.0, 1.0));
+                pos = mix(pos, apos, clamp(exp((1.0 - life) * 4.6 + rdir.x + rdir.y) / 100.0, 0.0, 1.0));
             }
             screen_col += drawParticle(uv - pos, psize * life, vec4(col.xyz, life));
         }

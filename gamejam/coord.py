@@ -14,3 +14,7 @@ class Coord2d():
 
     def __mul__(self, other):
         return Coord2d(self.x * other, self.y * other)
+
+
+    def to_list(self) -> list:
+        return [self.x, self.y]

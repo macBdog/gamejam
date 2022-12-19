@@ -22,7 +22,7 @@ class Particles:
         self.emitter_speeds = [1.0] * Particles.NumEmitters
         self.emitter_positions = [0.0] * Particles.NumEmitters * 2
         self.emitter_colours = [0.0] * Particles.NumEmitters * 3
-        self.emitter_attractors = [0.0] * Particles.NumEmitters * 2
+        self.emitter_attractors = [99.0] * Particles.NumEmitters * 2
         
         shader_substitutes = {
             "NUM_PARTICLE_EMITTERS": str(Particles.NumEmitters)
@@ -40,7 +40,7 @@ class Particles:
         self.emitter_attractors_id = glGetUniformLocation(self.shader, "EmitterAttractors")
 
 
-    def spawn(self, speed: float, pos: list, colour: list, life: float = 1.0):
+    def spawn(self, speed: float, pos: list, colour: list, life: float = 1.0, attractor_pos: list=None):
         """Create a bunch of particles at a location to be animated until they die."""
 
         search = 0
@@ -53,7 +53,8 @@ class Particles:
                     print(f"Particle system has run out of emitters!")
                 break
 
-        attractor_pos = [0.0, 0.0]
+        if attractor_pos is None:
+            attractor_pos = [99.0, 99.0]
         
         self.emitter = new_emitter
         self.emitters[self.emitter] = life

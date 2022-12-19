@@ -110,12 +110,12 @@ void main()
     }
     if (hasEffect(Type, at_fill_radial))
     {
-        float thalf = ((Frac * Mag) * 0.5) + 0.5;
+        float thalf = ((1.0 - (Frac * Mag)) * 0.5) + 0.5;
         float theta = (TAU / thalf) + PI;
         vec2 ruv = vec2((uv.x - 0.5) / DisplayRatio, uv.y - 0.5);
         float a = atan(ruv.x, ruv.y);
         float b = TAU * 2.0 - atan(ruv.x, ruv.y);
-        col *= b > theta ? 1.0 : 0.333;
+        col *= b > theta ? 0.333 : 1.0 ;
     }
     
 #ifdef shadertoy

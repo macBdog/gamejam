@@ -132,7 +132,7 @@ class GuiWidget(Widget):
         touch_pos = self._draw_pos
         touch_size = self._size
 
-        size_half = touch_size * 0.5
+        size_half = Coord2d(abs(touch_size.x) * 0.5, abs(touch_size.y))
         inside = (  mouse.pos.x >= touch_pos.x - size_half.x and
                     mouse.pos.x <= touch_pos.x + size_half.x and
                     mouse.pos.y >= touch_pos.y - size_half.y and
