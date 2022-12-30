@@ -5,3 +5,4 @@ PyOpenGL==3.1.6
 pytest==7.1.2
 setuptools==58.1.0
 rtmixer
+pyyaml

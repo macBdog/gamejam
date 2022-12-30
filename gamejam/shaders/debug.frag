@@ -100,8 +100,8 @@ vec4 drawWidget(in float ratio, in vec2 uv, in int selected, in vec2 anchor, in 
         col += elem_col * drawHollowRect(uv, shader_pos + vec2(size.x * 0.5, 0.0), anchor_size, thickness);
         col += elem_col * drawHollowRect(uv, shader_pos - vec2(0.0, size.y * 0.5), anchor_size, thickness);
         col += elem_col * drawHollowRect(uv, shader_pos + vec2(0.0, size.y * 0.5), anchor_size, thickness);
-        return col;
     }
+    return col;
 }
 
 vec4 drawWidgets(in float ratio, in vec2 uv)

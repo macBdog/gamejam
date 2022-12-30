@@ -1,0 +1,6 @@
+test_gui:
+  offset: 0.00, 0.00
+  size: 2.00, 2.00
+  align: AlignX.Centre, AlignY.Middle
+  align_to: AlignX.Centre, AlignY.Middle
+  children: []

@@ -21,6 +21,7 @@ class AnimType(enum.Enum):
     FillHorizontal = 9
     FillVertical = 10
     FillRadial = 11
+    Flash = 12
 
 class Animation:
     """ Animations store the state and timers for controller
@@ -64,9 +65,11 @@ class Animation:
             self._display_ratio_id = glGetUniformLocation(self.sprite.shader, "DisplayRatio")
 
 
-    def set_animation(self, type:AnimType):
+    def set_animation(self, type:AnimType, clear:bool=False):
+        if clear:
+            self.type.reset()
         self.type.set_bit(type.value)
-
+    
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.

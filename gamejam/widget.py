@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 import functools
 from gamejam.coord import Coord2d
+import yaml
 
 
 class AlignX(Enum):
@@ -141,18 +142,32 @@ class Widget():
                 draw_pos.y -= parent._size.y * 0.5
             elif align_to.y == AlignY.Bottom:
                 draw_pos.y += parent._size.y * 0.5
-
         return draw_pos
 
 
-    def dump(self):
-        """Print config to stdout for use with Gui editor"""
-        print(f"offset = [{self._offset.x:.2f}, {self._offset.y:.2f}]")
-        print(f"size = [{self._size.x:.2f}, {self._size.y:.2f}]")
-        print(f"align = [{self._align.x}, {self._align.y}]")
-        print(f"align_to = [{self._align_to.x}, {self._align_to.y}]")
-        print("")
+    @staticmethod
+    def serialize(widget, output):
+        output[widget.name] = {
+            "offset": f"{widget._offset.x:.2f}, {widget._offset.y:.2f}",
+            "size": f"{widget._size.x:.2f}, {widget._size.y:.2f}",
+            "align": f"{widget._align.x}, {widget._align.y}",
+            "align_to": f"{widget._align_to.x}, {widget._align_to.y}",
+            "children": [],
+        }
+        for child_widget in widget._children:
+            child_object = Widget.serialize(child_widget, object)
+            output[widget.name]["children"].append(child_object)
 
-        for widget in self._children:
-            widget.dump()
-            
+
+    def dump(self, stream):
+        """Print config to stdout for use with Gui editor"""
+        output = {}
+        Widget.serialize(self, output)
+        yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
+
+
+    def restore(self, stream):
+        """Load config from a file and set internal state"""
+        gui_obj = yaml.load(stream)
+        self.offset.x = gui_obj.offset.x
+  

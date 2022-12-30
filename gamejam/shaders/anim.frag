@@ -26,6 +26,7 @@ out vec4 outColour;
 #define at_fill_h 9
 #define at_fill_v 10
 #define at_fill_radial 11
+#define at_flash 12
 
 bool hasEffect(const int Val, const int Effect)
 {
@@ -116,6 +117,10 @@ void main()
         float a = atan(ruv.x, ruv.y);
         float b = TAU * 2.0 - atan(ruv.x, ruv.y);
         col *= b > theta ? 0.333 : 1.0 ;
+    }
+    if (hasEffect(Type, at_flash))
+    {
+        col.a *= (int(Frac * Mag * 10.0) % 2 == 0) ? 1.0 : 0.0;
     }
     
 #ifdef shadertoy
