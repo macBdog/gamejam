@@ -3,4 +3,16 @@ test_gui:
   size: 2.00, 2.00
   align: AlignX.Centre, AlignY.Middle
   align_to: AlignX.Centre, AlignY.Middle
-  children: []
+  children:
+  - Widget-a3c2e50:
+      offset: 0.32, 0.21
+      size: 0.10, 0.10
+      align: AlignX.Centre, AlignY.Middle
+      align_to: AlignX.Centre, AlignY.Middle
+      children: []
+  - Widget-a3c2e20:
+      offset: -0.51, -0.02
+      size: -0.39, -0.24
+      align: AlignX.Centre, AlignY.Middle
+      align_to: AlignX.Centre, AlignY.Middle
+      children: []

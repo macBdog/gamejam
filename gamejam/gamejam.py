@@ -18,6 +18,7 @@ from gamejam.graphics import Graphics
 from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
 from gamejam.texture import TextureManager
 from gamejam.gui import Gui
+from gamejam.gui_editor import GuiEditor, GuiEditMode
 from gamejam.font import Font
 from gamejam.profile import Profile
 from gamejam.particles import Particles
@@ -88,7 +89,8 @@ class GameJam:
 
         self.gui = Gui("main", self.graphics, self.font)
         self.gui.set_active(True, True)
-        Gui.init_debug_bindings(self.gui, self.input)
+
+        self.gui_editor = GuiEditor(self.gui, self.graphics, self.input, self.font)
 
 
     def begin(self):
@@ -110,8 +112,13 @@ class GameJam:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
             self.profile.begin("gui")
-            self.gui.touch(self.input.cursor)
-            self.gui.draw(self.dt)
+            if self.gui_editor.mode is not GuiEditMode.NONE:
+                self.gui.draw(self.dt)
+                self.gui_editor.touch(self.input.cursor)
+                self.gui_editor.draw(self.dt)
+            else:
+                self.gui.touch(self.input.cursor)
+                self.gui.draw(self.dt)
             self.profile.end()
 
             self.profile.begin("game")
@@ -119,7 +126,7 @@ class GameJam:
             self.profile.end()
 
             self.profile.begin("dev_stats")
-            if GameSettings.DEV_MODE or GameSettings.GUI_MODE:
+            if GameSettings.DEV_MODE or self.gui_editor.mode is not GuiEditMode.NONE:
                 cursor_pos = self.input.cursor.pos
                 self.font.draw("^", 8, cursor_pos - Coord2d(0.01, 0.03), [1.0] * 4)
                 self.font.draw(f"FPS: {math.floor(self.fps)}", 12, Coord2d(0.65, 0.75), [0.81, 0.81, 0.81, 1.0])

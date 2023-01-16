@@ -71,6 +71,7 @@ vec4 drawWidget(in float ratio, in vec2 uv, in int selected, in vec2 anchor, in 
 {
     vec4 col = vec4(0.0);
     vec2 thickness = vec2(line_width, line_width / ratio);
+    size = abs(size);
     
     // Outline in white
     vec2 shader_pos = ((anchor + pos) + 1.0) * 0.5;

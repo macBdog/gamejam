@@ -155,12 +155,13 @@ class Widget():
             "children": [],
         }
         for child_widget in widget._children:
-            child_object = Widget.serialize(child_widget, object)
+            child_object = {}
+            Widget.serialize(child_widget, child_object)
             output[widget.name]["children"].append(child_object)
 
 
     def dump(self, stream):
-        """Print config to stdout for use with Gui editor"""
+        """Write hierachy to a yaml file, called by Gui editor"""
         output = {}
         Widget.serialize(self, output)
         yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
