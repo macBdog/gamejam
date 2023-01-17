@@ -215,17 +215,18 @@ class GuiEditor():
             if type(child) is Gui:
                 pass
             else:
-                touch_state = child.touch(mouse)
-                if touch_state == TouchState.Hover:
-                     self.widget_to_hover = child
+                if hasattr(child, "touch"):
+                    touch_state = child.touch(mouse)
+                    if touch_state == TouchState.Hover:
+                        self.widget_to_hover = child
 
-                if self.widget_to_edit is None:
-                    if touch_state == TouchState.Touched:
-                        self.widget_to_edit = child
-                        break
-                else:
-                    if touch_state == TouchState.Touched:
-                        touched_widget = True
+                    if self.widget_to_edit is None:
+                        if touch_state == TouchState.Touched:
+                            self.widget_to_edit = child
+                            break
+                    else:
+                        if touch_state == TouchState.Touched:
+                            touched_widget = True
         
         # Deselect any selected widget
         if mouse.buttons[0] and touched_widget == False:

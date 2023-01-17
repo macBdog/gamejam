@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
@@ -13,7 +16,7 @@ class Gui(Widget):
     """Manager style functionality for a collection of widget classes.
     Also convenience functions for window handling and display of position hierarchy."""
 
-    def __init__(self, name: str, graphics: Graphics, debug_font: Font):
+    def __init__(self, name: str, graphics: Graphics, debug_font: Font, restore_from_file:bool=True):
         super().__init__()
         self.name = name
         self.active_draw = False
@@ -24,6 +27,12 @@ class Gui(Widget):
         self.debug_dirty = False
         self.debug_hover = None
         self.cursor = None
+
+        if restore_from_file:
+            gui_path = Path(os.getcwd()) / "gui" / f"{name}.yml"
+            if gui_path.exists():
+                with open(gui_path, 'r') as stream:
+                    GuiWidget.restore(self, stream)
       
         self.set_size(Coord2d(2.0, 2.0))
 
@@ -68,7 +77,8 @@ class Gui(Widget):
 
         if self.active_input:
             for child in self._children:
-                child.touch(mouse)
+                if hasattr(child, "touch"):
+                    child.touch(mouse)
 
 
     def draw(self, dt: float):

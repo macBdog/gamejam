@@ -18,3 +18,14 @@ class Coord2d():
 
     def to_list(self) -> list:
         return [self.x, self.y]
+
+
+    def from_list(self, coord_list: list):
+        if len(coord_list) > 1:
+            self.x = coord_list[0]
+            self.y = coord_list[1]
+
+
+    def from_string(self, string: str):
+        scomps = string.replace(" ", "").split(",")
+        self.from_list([float(s) for s in scomps])

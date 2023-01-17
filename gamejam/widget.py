@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 import functools
 from gamejam.coord import Coord2d
-import yaml
 
 
 class AlignX(Enum):
@@ -32,6 +31,8 @@ def widget_dirty(func):
 
 
 class Widget():
+    """A widget is a position-based hierarchical node. It's an empty anchor 
+    without any utility. For drawing textures, font and interactions see GuiWidget."""
     def __init__(self, name: str=""):
         # Draw pos automatically gets refreshed when the dirty flag is set
         self._dirty = True
@@ -143,32 +144,3 @@ class Widget():
             elif align_to.y == AlignY.Bottom:
                 draw_pos.y += parent._size.y * 0.5
         return draw_pos
-
-
-    @staticmethod
-    def serialize(widget, output):
-        output[widget.name] = {
-            "offset": f"{widget._offset.x:.2f}, {widget._offset.y:.2f}",
-            "size": f"{widget._size.x:.2f}, {widget._size.y:.2f}",
-            "align": f"{widget._align.x}, {widget._align.y}",
-            "align_to": f"{widget._align_to.x}, {widget._align_to.y}",
-            "children": [],
-        }
-        for child_widget in widget._children:
-            child_object = {}
-            Widget.serialize(child_widget, child_object)
-            output[widget.name]["children"].append(child_object)
-
-
-    def dump(self, stream):
-        """Write hierachy to a yaml file, called by Gui editor"""
-        output = {}
-        Widget.serialize(self, output)
-        yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
-
-
-    def restore(self, stream):
-        """Load config from a file and set internal state"""
-        gui_obj = yaml.load(stream)
-        self.offset.x = gui_obj.offset.x
-  

@@ -1,5 +1,6 @@
 import enum
-
+import yaml
+import logging
 from gamejam.animation import AnimType, Animation
 from gamejam.graphics import Shader
 from gamejam.texture import SpriteTexture
@@ -43,6 +44,33 @@ class GuiWidget(Widget):
         self.text_offset = Coord2d()
         self.text_col = [1.0, 1.0, 1.0, 1.0]
         self.animation = None
+
+
+    @staticmethod
+    def serialize(widget, output):
+        output[widget.name] = {
+            "offset": f"{widget._offset.x:.2f}, {widget._offset.y:.2f}",
+            "size": f"{widget._size.x:.2f}, {widget._size.y:.2f}",
+            "align": f"{widget._align.x}, {widget._align.y}",
+            "align_to": f"{widget._align_to.x}, {widget._align_to.y}",
+            "children": [],
+        }
+        for child_widget in widget._children:
+            child_object = {}
+            Widget.serialize(child_widget, child_object)
+            output[widget.name]["children"].append(child_object)
+
+
+    @staticmethod
+    def deserialize(widget, input):
+        if "offset" in input:
+            widget._offset.from_string(input["offset"])
+        if "size" in input:
+            widget._size.from_string(input["size"])
+        if "align" in input:
+            pass
+        if "align_to" in input:
+            pass
 
 
     def set_sprite(self, sprite: SpriteTexture, stretch:bool=False):
@@ -190,3 +218,25 @@ class GuiWidget(Widget):
             text_offset = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)                
             self.font.draw(self.text, self.text_size, text_offset, self.text_col)
 
+
+    def dump(self, stream):
+        """Write hierachy to a yaml file, called by Gui editor"""
+        output = {}
+        GuiWidget.serialize(self, output)
+        yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
+
+
+    def restore(self, stream):
+        """Load config from a file and set internal state"""
+        obj = yaml.load(stream, Loader=yaml.Loader)
+        if self.name in obj:
+            widget_input = obj[self.name]
+            GuiWidget.deserialize(self, widget_input)
+            if "children" in widget_input and type(widget_input["children"]) is list:
+                for child in widget_input["children"]:
+                    child_name = next(iter(child))
+                    child_widget = GuiWidget(child_name)
+                    GuiWidget.deserialize(child_widget, child[child_name])
+                    self._children.append(child_widget)
+        else:
+            logging.error(f"Widget load error! Trying to restore a widget named {self.name} from a stream called {stream.name}")
