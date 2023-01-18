@@ -9,7 +9,6 @@ from gamejam.cursor import Cursor
 from gamejam.font import Font
 from gamejam.input import Input, InputActionKey, InputActionModifier
 from gamejam.graphics import Graphics, Shader, ShaderType
-from gamejam.settings import GameSettings
 from gamejam.texture import SpriteTexture, Texture
 from gamejam.gui import Gui
 
@@ -29,6 +28,9 @@ class GuiEditMode(Enum):
     SIZE = 3,
     TEXT_OFFSET = 4,
     TEXT_SIZE = 5,
+    PARENT = 6,
+    ALIGN = 7,
+    ALIGN_TO = 8,
 
 
 class GuiEditor():
@@ -46,7 +48,10 @@ class GuiEditor():
         self.gui_to_edit = None
         self.widget_to_edit = None
         self.widget_to_hover = None
+        self.widget_to_set_parent = None
+        self.align_hover = -1
         self.debug_size_pos = [0.0] * GuiEditor.NUM_DEBUG_WIDGETS * 4
+        self.debug_parent_pos = [0.0] * GuiEditor.NUM_DEBUG_WIDGETS * 2
         self.debug_align = [0] * GuiEditor.NUM_DEBUG_WIDGETS
 
         shader_substitutes = {
@@ -60,8 +65,10 @@ class GuiEditor():
 
         self.display_ratio_id = glGetUniformLocation(self.shader, "DisplayRatio")
         self.debug_hover_id = glGetUniformLocation(self.shader, "WidgetHoverId")
+        self.debug_align_hover_id = glGetUniformLocation(self.shader, "AlignHoverId")
         self.debug_selected_id = glGetUniformLocation(self.shader, "WidgetSelectedId")
         self.debug_size_pos_id = glGetUniformLocation(self.shader, "WidgetSizePosition")
+        self.debug_parent_pos_id = glGetUniformLocation(self.shader, "WidgetParentPosition")
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
 
         self._init_debug_bindings(input)
@@ -81,6 +88,11 @@ class GuiEditor():
         # F and T for text offset and size
         input.add_key_mapping(70, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.TEXT_SIZE})
         input.add_key_mapping(84, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.TEXT_OFFSET})
+
+        # P, A and Ctrl-A for alignment
+        input.add_key_mapping(80, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.PARENT})
+        input.add_key_mapping(64, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.ALIGN})
+        input.add_key_mapping(64, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.ALIGN})
 
         # Ctrl-G to enable gui editing mode
         input.add_key_mapping(71, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.toggle_gui_mode, {"editor": self})
@@ -185,6 +197,8 @@ class GuiEditor():
         if editor.mode is not GuiEditMode.NONE:
             if editor.mode is GuiEditMode.INSPECT:
                 editor.mode = mode
+                if editor.mode == GuiEditMode.PARENT:
+                    editor.widget_to_set_parent = editor.widget_to_edit
             else:
                 editor.mode = GuiEditMode.INSPECT
                 editor.edit_start_pos = None
@@ -223,6 +237,12 @@ class GuiEditor():
                     if self.widget_to_edit is None:
                         if touch_state == TouchState.Touched:
                             self.widget_to_edit = child
+
+                            # Changing the parent
+                            if self.widget_to_set_parent is not None and self.widget_to_set_parent != child:
+                                self.widget_to_set_parent.set_parent(child)
+                                self.widget_to_set_parent.set_offset(Coord2d())
+                            self.widget_to_set_parent = None
                             break
                     else:
                         if touch_state == TouchState.Touched:
@@ -267,6 +287,7 @@ class GuiEditor():
             return
 
         selection_draw_pos = Coord2d(-0.75, 0.75)
+        self.font.draw(self.mode.name, 8, selection_draw_pos + Coord2d(0.0, 0.1), [1.0, 0.75, 1.0, 0.5])
         self._draw_gui_selection(self.main_gui, selection_draw_pos)
         
         def debug_widget_uniforms():
@@ -274,6 +295,7 @@ class GuiEditor():
             glUniform1i(self.debug_selected_id, selected_widget_id)
             glUniform1i(self.debug_hover_id, hover_widget_id)
             glUniform4fv(self.debug_size_pos_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_size_pos)
+            glUniform4fv(self.debug_parent_pos_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_parent_pos)
             glUniform1iv(self.debug_align_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_align)
 
         # Start with no valid debug alignment, nothing will show
@@ -298,6 +320,10 @@ class GuiEditor():
                 self.debug_size_pos[sp_index + 1] = widget._size.y
                 self.debug_size_pos[sp_index + 2] = widget._draw_pos.x
                 self.debug_size_pos[sp_index + 3] = widget._draw_pos.y
+                if widget._parent is not None:
+                    pp_index = debug_widget_index * 2
+                    self.debug_parent_pos[pp_index + 0] = widget._parent._draw_pos.x
+                    self.debug_parent_pos[pp_index + 1] = widget._parent._draw_pos.y
                 self.debug_align[debug_widget_index] = (widget._align.x.value * 10) + widget._align.y.value
                 debug_widget_index += 1
                 if debug_widget_index >= GuiEditor.NUM_DEBUG_WIDGETS:
