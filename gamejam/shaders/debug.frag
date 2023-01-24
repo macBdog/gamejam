@@ -71,40 +71,55 @@ float drawLineSquare(in vec2 uv, in vec2 start, in vec2 end, in float width, boo
     return clamp(col, 0.0, 1.0);
 }
 
-vec4 drawWidget(in float ratio, in vec2 uv, in bool show_align, in vec2 anchor, in vec2 size, in vec2 pos, int align_x, int align_y, int anchor_x, int anchor_y)
+vec4 drawWidget(in float ratio, in vec2 uv, in bool show_align, in vec2 anchor, in vec2 size, in vec2 offset, in int align, in int align_to)
 {
     vec4 col = vec4(0.0);
     vec2 thickness = vec2(line_width, line_width / ratio);
     size = abs(size);
+    vec2 hsize = size * -0.5;
     
     // Outline in white
-    vec2 shader_pos = (pos + 1.0) * 0.5;
+    vec2 shader_pos = (offset + 1.0) * 0.5;
 #ifndef shadertoy
     shader_pos.y = 1.0 - shader_pos.y;
     size *= 0.5;
+    hsize = size * 0.5;
 #endif
     col += drawHollowRect(uv, shader_pos, size, thickness);
     
     if (show_align)
     {
-        // Anchor in blue
+        // Aligment in red with pink for hover or aligned
         vec2 anchor_size = vec2(0.02, 0.02 / ratio);
-        vec4 elem_col = vec4(0.12, 0.1, 0.75, 1.0);
+        int align_x =  align / 10;
+        int align_y = align - (align_x * 10);
+        vec4 elem_col = vec4(0.5, 0.1, 0.08, 0.75);
+        vec4 elem_col_sel = elem_col + vec4(0.4, 0.12, 0.8, 0.25);
+        
+        // 9 anchors in red with hover/selected in pink
+        vec2 a_pos = vec2(0.0);
+        vec2 hsize = size * 0.5;
+        int a_x[9] = int[](1,1,1,2,2,2,3,3,3);
+        int a_y[9] = int[](1,2,3,1,2,3,1,2,3);
+        for (int i = 0; i < 9; i++)
+        {
+            if (a_x[i] == 1 && a_y[i] == 1) { a_pos = vec2(-hsize.x, hsize.y); }
+            else if (a_x[i] == 1 && a_y[i] == 2) { a_pos = vec2(-hsize.x, 0.0); }
+            else if (a_x[i] == 1 && a_y[i] == 3) { a_pos = vec2(-hsize.x, -hsize.y); }
+            else if (a_x[i] == 2 && a_y[i] == 1) { a_pos = vec2(0.0, hsize.y); }
+            else if (a_x[i] == 2 && a_y[i] == 3) { a_pos = vec2(0.0, -hsize.y); }
+            else if (a_x[i] == 3 && a_y[i] == 1) { a_pos = vec2(hsize.x, hsize.y); }
+            else if (a_x[i] == 3 && a_y[i] == 2) { a_pos = vec2(hsize.x, 0.0); }
+            else if (a_x[i] == 3 && a_y[i] == 3) { a_pos = vec2(hsize.x, -hsize.y); }  
+
+            bool sel = align_x == a_x[i] && align_y == a_y[i];
+            col += (sel ? elem_col_sel : elem_col) * drawHollowRect(uv, shader_pos + a_pos, anchor_size, thickness);
+        }
+
+        // Anchor in blue
         vec2 anchor_pos = (anchor + 1.0) * 0.5;
         col += elem_col * drawHollowRect(uv, anchor_pos, anchor_size, thickness);
-        col += elem_col * drawLineRounded(uv, anchor_pos, shader_pos, line_width);
-        
-        // Aligment in red with pink for hover or aligned
-        elem_col = vec4(0.74, 0.12, 0.1, 1.0);
-        col += elem_col * drawHollowRect(uv, shader_pos, anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos - size * 0.5, anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos + size * 0.5, anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos + vec2(size.x * 0.5, size.y * -0.5), anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos + vec2(size.x * -0.5, size.y * 0.5), anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos - vec2(size.x * 0.5, 0.0), anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos + vec2(size.x * 0.5, 0.0), anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos - vec2(0.0, size.y * 0.5), anchor_size, thickness);
-        col += elem_col * drawHollowRect(uv, shader_pos + vec2(0.0, size.y * 0.5), anchor_size, thickness);
+        col += elem_col * drawLineRounded(uv, anchor_pos, shader_pos + a_pos, line_width);
     }
     return col;
 }
@@ -114,13 +129,11 @@ vec4 drawWidgets(in float ratio, in vec2 uv)
     vec4 col = vec4(0.0);
     for (int i = 0; i < NUM_DEBUG_WIDGETS; ++i)
     {
-        int align_x = WidgetAlign[i] / 10;
-        int align_y = WidgetAlign[i] - align_x;
-        if (align_x > 0)
+        if (WidgetAlign[i] > 0)
         {
             bool selected = i == WidgetSelectedId;
             int selected_id = selected ? 1 : 0;
-            vec4 widget = drawWidget(ratio, uv, selected, WidgetParentPosition[i], WidgetSizePosition[i].xy, WidgetSizePosition[i].zw, align_x, align_y, 0, 0);
+            vec4 widget = drawWidget(ratio, uv, selected, WidgetParentPosition[i], WidgetSizePosition[i].xy, WidgetSizePosition[i].zw, AlignHoverId > 0 ? AlignHoverId : WidgetAlign[i], 0);
             widget.a = selected ? 1.0 : i == WidgetHoverId ? 0.75 : 0.5;
             col += widget;
         }

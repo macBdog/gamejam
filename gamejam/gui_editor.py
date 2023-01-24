@@ -2,6 +2,7 @@ import os
 from enum import Enum
 from pathlib import Path
 
+from gamejam.widget import Alignment, AlignX, AlignY
 from gamejam.gui_widget import TouchState
 from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
@@ -17,7 +18,8 @@ from OpenGL.GL import (
     glUniform1i,
     glUniform1f,
     glUniform1iv,
-    glUniform4fv
+    glUniform4fv,
+    glUniform2fv,
 )
 
 
@@ -209,11 +211,41 @@ class GuiEditor():
         self.mode = GuiEditMode.INSPECT
 
 
+    def _align_hover(self, mouse_pos: Coord2d, widget: any) -> int:
+        self.align_hover = -1
+        a_half = Coord2d(0.02, 0.04 * self.display_ratio)
+        w_half = widget._size * 0.5
+        w_half.x = abs(w_half.x)
+        w_half.y = abs(w_half.y)
+        if (mouse_pos.x >= widget._draw_pos.x - w_half.x - a_half.x and 
+            mouse_pos.x <= widget._draw_pos.x - w_half.x + a_half.x):
+            self.align_hover = 10
+        elif (mouse_pos.x <= widget._draw_pos.x + a_half.x and 
+            mouse_pos.x >= widget._draw_pos.x - a_half.x):
+            self.align_hover = 20
+        elif (mouse_pos.x <= widget._draw_pos.x + w_half.x + a_half.x and 
+            mouse_pos.x >= widget._draw_pos.x + w_half.x - a_half.x):
+            self.align_hover = 30
+        if self.align_hover > 0:
+            if (mouse_pos.y <= widget._draw_pos.y + w_half.y + a_half.y and 
+                mouse_pos.y >= widget._draw_pos.y + w_half.y - a_half.y):
+                self.align_hover += 3
+            elif (mouse_pos.y <= widget._draw_pos.y + a_half.y and 
+                mouse_pos.y >= widget._draw_pos.y - a_half.y):
+                self.align_hover += 2
+            elif (mouse_pos.y >= widget._draw_pos.y - w_half.y - a_half.y and 
+                mouse_pos.y <= widget._draw_pos.y - w_half.y + a_half.y):
+                self.align_hover += 1
+            else:
+                self.align_hover = -1
+
     def touch(self, mouse: Cursor):
         if self.mode is GuiEditMode.NONE or self.gui_to_edit is None:
             return
 
         if self.widget_to_edit is not None:
+            self._align_hover(mouse.pos, self.widget_to_edit)
+
             if self.edit_start_pos is None:
                 self.edit_start_pos = mouse.pos
             else:
@@ -238,12 +270,21 @@ class GuiEditor():
                         if touch_state == TouchState.Touched:
                             self.widget_to_edit = child
 
+                            # Changing the alignment
+                            if self.align_hover > 0:
+                                new_align = Alignment(
+                                    x=AlignX(self.align_hover // 10), 
+                                    y=AlignY(self.align_hover - ((self.align_hover // 10) * 10))
+                                )
+                                self.widget_to_edit.set_offset(Coord2d())
+                                self.widget_to_edit.set_align(new_align)
+                                self.align_hover = -1
+
                             # Changing the parent
                             if self.widget_to_set_parent is not None and self.widget_to_set_parent != child:
                                 self.widget_to_set_parent.set_parent(child)
                                 self.widget_to_set_parent.set_offset(Coord2d())
                             self.widget_to_set_parent = None
-                            break
                     else:
                         if touch_state == TouchState.Touched:
                             touched_widget = True
@@ -294,8 +335,9 @@ class GuiEditor():
             glUniform1f(self.display_ratio_id, self.display_ratio)
             glUniform1i(self.debug_selected_id, selected_widget_id)
             glUniform1i(self.debug_hover_id, hover_widget_id)
+            glUniform1i(self.debug_align_hover_id, self.align_hover)
             glUniform4fv(self.debug_size_pos_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_size_pos)
-            glUniform4fv(self.debug_parent_pos_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_parent_pos)
+            glUniform2fv(self.debug_parent_pos_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_parent_pos)
             glUniform1iv(self.debug_align_id, GuiEditor.NUM_DEBUG_WIDGETS, self.debug_align)
 
         # Start with no valid debug alignment, nothing will show
