@@ -13,7 +13,7 @@ from OpenGL.GL import (
     GL_BLEND, GL_SMOOTH, GL_DEPTH_TEST, GL_LEQUAL,
     GL_TRUE
 )
-from gamejam.coord import Coord2d
+from gamejam.coord import Coord2d, Coord3d
 from gamejam.graphics import Graphics
 from gamejam.input import Input, InputActionKey, InputMethod, InputActionModifier
 from gamejam.texture import TextureManager
@@ -70,9 +70,23 @@ class GameJam:
         self.input.add_key_mapping(283, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.profile.capture_next_frame)
 
         def toggle_dev_mode(): GameSettings.DEV_MODE = not GameSettings.DEV_MODE
+        def debug_camera_move(**kwargs):
+            dir = kwargs["dir"]
+            if GameSettings.DEV_MODE and type(dir) is Coord3d:
+                self.graphics.camera.pos += dir
         
         # Ctrl-D to enable developer mode
         self.input.add_key_mapping(68, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, toggle_dev_mode)
+
+        # Switch between 2D and 3D projection
+        self.input.add_key_mapping(50, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.graphics.set_orthographic)
+        self.input.add_key_mapping(51, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.graphics.set_perspective)
+
+        # Camera controls
+        self.input.add_key_mapping(68, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, debug_camera_move, {"dir": Coord3d(1.0, 0.0, 0.0)})
+        self.input.add_key_mapping(65, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, debug_camera_move, {"dir": Coord3d(-1.0, 0.0, 0.0)})
+        self.input.add_key_mapping(69, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, debug_camera_move, {"dir": Coord3d(0.0, 0.0, 1.0)})
+        self.input.add_key_mapping(81 , InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, debug_camera_move, {"dir": Coord3d(0.0, 0.0, -1.0)})
 
         glViewport(0, 0, self.window_width, self.window_height)
         glClearColor(0.0, 0.0, 0.0, 1.0)

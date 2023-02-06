@@ -100,7 +100,7 @@ class SpriteShape(Sprite):
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)
         glUniformMatrix4fv(self.object_mat_id, 1, GL_TRUE, self.object_mat)
-        glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.view_mat)
+        glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.mat)
         glUniformMatrix4fv(self.projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
         glUniform4f(self.colour_id, self.colour[0], self.colour[1], self.colour[2], self.colour[3])
         glUniform2f(self.pos_id, self.pos.x, self.pos.y)
