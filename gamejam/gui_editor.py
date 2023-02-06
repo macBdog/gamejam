@@ -2,6 +2,7 @@ import os
 from enum import Enum
 from pathlib import Path
 
+from gamejam.asset_picker import AssetPicker, AssetType
 from gamejam.widget import Alignment, AlignX, AlignY
 from gamejam.gui_widget import TouchState
 from gamejam.texture import SpriteTexture
@@ -52,6 +53,9 @@ class GuiEditor():
         self.widget_to_hover = None
         self.widget_to_set_parent = None
         self.align_hover = -1
+        self.parent_hover = None
+        self.parent_align_hover = -1
+        self.picker = AssetPicker(self, graphics, input, font)
         self.debug_size_pos = [0.0] * GuiEditor.NUM_DEBUG_WIDGETS * 4
         self.debug_parent_pos = [0.0] * GuiEditor.NUM_DEBUG_WIDGETS * 2
         self.debug_align = [0] * GuiEditor.NUM_DEBUG_WIDGETS
@@ -74,6 +78,7 @@ class GuiEditor():
         self.debug_align_id = glGetUniformLocation(self.shader, "WidgetAlign")
 
         self._init_debug_bindings(input)
+        self.picker._init_debug_bindings(input)
 
 
     def _init_debug_bindings(self, input: Input):
@@ -101,6 +106,9 @@ class GuiEditor():
 
         # Ctrl-S to serialize gui to yaml file
         input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.to_file, {"editor": self})
+
+        # S for source asset
+        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.show_asset_picker, {"editor": self})
 
         # Direction keys to move around the widget hierachy
         input.add_key_mapping(264, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "down"})
@@ -206,45 +214,58 @@ class GuiEditor():
                 editor.edit_start_pos = None
 
 
+    @staticmethod
+    def show_asset_picker(**kwargs):
+        editor = kwargs["editor"]
+        if editor.widget_to_edit is not None and editor.picker.active is False:
+            editor.picker.show(AssetType.TEXTURE, Path(os.getcwd()))
+
+
     def deselect(self):
         self.widget_to_edit = None
         self.mode = GuiEditMode.INSPECT
 
 
-    def _align_hover(self, mouse_pos: Coord2d, widget: any) -> int:
-        self.align_hover = -1
+    def _get_align_hover(self, mouse_pos: Coord2d, widget: any) -> int:
+        align_hover = -1
         a_half = Coord2d(0.02, 0.04 * self.display_ratio)
         w_half = widget._size * 0.5
         w_half.x = abs(w_half.x)
         w_half.y = abs(w_half.y)
         if (mouse_pos.x >= widget._draw_pos.x - w_half.x - a_half.x and 
             mouse_pos.x <= widget._draw_pos.x - w_half.x + a_half.x):
-            self.align_hover = 10
+            align_hover = 10
         elif (mouse_pos.x <= widget._draw_pos.x + a_half.x and 
             mouse_pos.x >= widget._draw_pos.x - a_half.x):
-            self.align_hover = 20
+            align_hover = 20
         elif (mouse_pos.x <= widget._draw_pos.x + w_half.x + a_half.x and 
             mouse_pos.x >= widget._draw_pos.x + w_half.x - a_half.x):
-            self.align_hover = 30
+            align_hover = 30
         if self.align_hover > 0:
             if (mouse_pos.y <= widget._draw_pos.y + w_half.y + a_half.y and 
                 mouse_pos.y >= widget._draw_pos.y + w_half.y - a_half.y):
-                self.align_hover += 3
+                align_hover += 3
             elif (mouse_pos.y <= widget._draw_pos.y + a_half.y and 
                 mouse_pos.y >= widget._draw_pos.y - a_half.y):
-                self.align_hover += 2
+                align_hover += 2
             elif (mouse_pos.y >= widget._draw_pos.y - w_half.y - a_half.y and 
                 mouse_pos.y <= widget._draw_pos.y - w_half.y + a_half.y):
-                self.align_hover += 1
+                align_hover += 1
             else:
-                self.align_hover = -1
+                align_hover = -1
+        return align_hover
+
 
     def touch(self, mouse: Cursor):
         if self.mode is GuiEditMode.NONE or self.gui_to_edit is None:
             return
 
+        if self.picker.active:
+            self.picker.touch(mouse)
+            return
+
         if self.widget_to_edit is not None:
-            self._align_hover(mouse.pos, self.widget_to_edit)
+            self._align_hover = self._get_align_hover(mouse.pos, self.widget_to_edit)
 
             if self.edit_start_pos is None:
                 self.edit_start_pos = mouse.pos
@@ -265,6 +286,10 @@ class GuiEditor():
                     touch_state = child.touch(mouse)
                     if touch_state == TouchState.Hover:
                         self.widget_to_hover = child
+
+                        if self.mode is GuiEditMode.PARENT:
+                            self.parent_hover = child
+                            self.parent_align_hover = self._get_align_hover(mouse.pos, child)
 
                     if self.widget_to_edit is None:
                         if touch_state == TouchState.Touched:
@@ -325,6 +350,10 @@ class GuiEditor():
             return
 
         if self.gui_to_edit is None:
+            return
+
+        if self.picker.active:
+            self.picker.draw(dt)
             return
 
         selection_draw_pos = Coord2d(-0.75, 0.75)

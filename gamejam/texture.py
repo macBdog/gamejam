@@ -5,6 +5,7 @@ import numpy
 
 from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics, Shader
+from gamejam.quickmaff import MATRIX_IDENTITY
 
 
 class Texture:
@@ -51,6 +52,7 @@ class Sprite:
         self.graphics = graphics
         self.pos = pos
         self.colour = colour[:]
+        self.object_mat = MATRIX_IDENTITY[:]
         self.size = size
 
     def set_alpha(self, new_alpha: float):
@@ -90,10 +92,16 @@ class SpriteShape(Sprite):
         self.colour_id = glGetUniformLocation(self.shader, "Colour")
         self.pos_id = glGetUniformLocation(self.shader, "Position")
         self.size_id = glGetUniformLocation(self.shader, "Size")
+        self.object_mat_id = glGetUniformLocation(self.shader, "ObjectMatrix")
+        self.view_mat_id = glGetUniformLocation(self.shader, "ViewMatrix")
+        self.projection_mat = glGetUniformLocation(self.shader, "ProjectionMatrix")
 
 
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)
+        glUniformMatrix4fv(self.object_mat_id, 1, GL_TRUE, self.object_mat)
+        glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.view_mat)
+        glUniformMatrix4fv(self.projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
         glUniform4f(self.colour_id, self.colour[0], self.colour[1], self.colour[2], self.colour[3])
         glUniform2f(self.pos_id, self.pos.x, self.pos.y)
         glUniform2f(self.size_id, self.size.x, self.size.y)
@@ -141,10 +149,16 @@ class SpriteTexture(Sprite):
         self.colour_id = glGetUniformLocation(self.shader, "Colour")
         self.pos_id = glGetUniformLocation(self.shader, "Position")
         self.size_id = glGetUniformLocation(self.shader, "Size")
+        self.object_mat_id = glGetUniformLocation(self.shader, "ObjectMatrix")
+        self.view_mat_id = glGetUniformLocation(self.shader, "ViewMatrix")
+        self.projection_mat = glGetUniformLocation(self.shader, "ProjectionMatrix")
 
 
     def draw(self, custom_uniforms_func=None):
         glUseProgram(self.shader)
+        glUniformMatrix4fv(self.object_mat_id, 1, GL_TRUE, self.object_mat)
+        glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.mat)
+        glUniformMatrix4fv(self.projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
         glUniform4f(self.colour_id, self.colour[0], self.colour[1], self.colour[2], self.colour[3])
         glUniform2f(self.pos_id, self.pos.x, self.pos.y)
         glUniform2f(self.size_id, self.size.x, self.size.y)

@@ -4,6 +4,9 @@ in vec2 VertexPosition;
 in vec2 TexCoord;
 uniform vec2 Position;
 uniform vec2 Size;
+uniform mat4 ObjectMatrix;
+uniform mat4 ViewMatrix;
+uniform mat4 ProjectionMatrix;
 out vec2 OutTexCoord;
 
 void main() 

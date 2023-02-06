@@ -13,13 +13,14 @@ from OpenGL.GL import (
     glEnableVertexAttribArray,
     glGetAttribLocation,
     glGetUniformLocation,
+    glUniformMatrix4fv,
     glUniform2f, glUniform4f,
     glDrawElements,
     GL_TEXTURE_2D, GL_TEXTURE0,
     GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
     GL_CLAMP_TO_EDGE,
     GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER,
-    GL_LINEAR,
+    GL_LINEAR, GL_TRUE,
     GL_R8, GL_RED, GL_FLOAT, GL_UNSIGNED_INT, GL_UNSIGNED_BYTE, GL_FALSE,
     GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER,
     GL_STATIC_DRAW,
@@ -29,6 +30,7 @@ from OpenGL.GL import (
 from gamejam.graphics import Graphics, Shader
 from gamejam.settings import GameSettings
 from gamejam.coord import Coord2d
+from gamejam.quickmaff import MATRIX_IDENTITY
 
 class Font():
     def blit(self, dest, src, loc):
@@ -86,6 +88,7 @@ class Font():
         self.tex_width = 2048
         self.tex_height = 2048
         self.image_data = np.zeros((self.tex_width, self.tex_height), dtype=np.uint8)
+        self.object_mat = MATRIX_IDENTITY
 
         if GameSettings.DEV_MODE:
             print(f"Building font atlas for {filename}: ", end='')
@@ -164,6 +167,10 @@ class Font():
         self.colour_id = glGetUniformLocation(shader_font, "Colour")
         self.pos_id = glGetUniformLocation(shader_font, "Position")
         self.size_id = glGetUniformLocation(shader_font, "Size")
+        self.object_mat_id = glGetUniformLocation(shader_font, "ObjectMatrix")
+        self.view_mat_id = glGetUniformLocation(shader_font, "ViewMatrix")
+        self.projection_mat = glGetUniformLocation(shader_font, "ProjectionMatrix")
+
 
     def draw(self, string: str, font_size: int, pos: Coord2d, colour: list):
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
@@ -173,6 +180,9 @@ class Font():
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         glBindVertexArray(self.VAO)
+        glUniformMatrix4fv(self.object_mat_id, 1, GL_TRUE, self.object_mat)
+        glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.mat)
+        glUniformMatrix4fv(self.projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
         draw_pos, display_size = copy(pos), font_size * 0.0000005
 
         for i in range(len(string)):
