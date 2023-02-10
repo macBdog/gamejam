@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from gamejam.widget import Alignment, AlignX, AlignY
-from gamejam.gui_widget import TouchState
+from gamejam.gui_widget import GuiWidget, TouchState
 from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
@@ -31,6 +31,7 @@ class AssetPicker():
     """Selectable grid of textures and other assets used with GuiEditor."""
     ASSET_DISPLAY_SIZE = Coord2d(0.02, 0.02)
     ASSET_SPACING = Coord2d(0.005, 0.005)
+    IGNORED_DIR_PREFIX = [".", "_"]
     FILE_EXTENSIONS = {
         AssetType.TEXTURE: [ ".png", ".jpg", ".tga" ],
         AssetType.SOUND: [ ".wav" ],
@@ -41,8 +42,11 @@ class AssetPicker():
         super().__init__()
         self.editor = editor
         self.type = AssetType.TEXTURE
+        self.path = None
+        self.dirs = []
         self.display_ratio = graphics.display_ratio
         self.font = font
+        self.draw_pos = Coord2d(-0.85, 0.85)
         self.close()
         self._init_debug_bindings(input)
 
@@ -59,10 +63,32 @@ class AssetPicker():
         pass
 
 
-    def show(self, type: AssetType, path: Path):
+    @staticmethod
+    def change_dir(**kwargs):
+        picker = kwargs["picker"]
+        dir = kwargs["dir"]
+        if picker.path is not None:
+            picker.show(picker.type, picker.path / dir)
+
+
+    def show(self, type: AssetType, path: Path, keep_last_valid_path=True):
         if self.type is not AssetType.NONE:
-            if path.exists() and path.is_dir():
-                asset_paths = [f for f in path.iterdir() if any(AssetPicker.FILE_EXTENSIONS[type] in f.lower*())]
+            if self.path is None:
+                self.path = path
+            elif not keep_last_valid_path:
+                self.path = path
+
+            if self.path.exists() and self.path.is_dir():
+                self.type = type
+                self.active = True
+                dir_names = [str(f) for f in path.iterdir() if f.is_dir() and str(f)[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
+                for i, dir in enumerate(dir_names):
+                    dir_widget = GuiWidget(dir, self.font)
+                    dir_widget.set_text(dir, 6)
+                    dir_widget.set_offset(self.draw_pos + Coord2d(0.5, i*0.06))
+                    dir_widget.set_action(AssetPicker.change_dir, {"picker": self, "dir": dir})
+                    self.dirs.append(dir_widget)
+                asset_paths = [f for f in path.iterdir() if str(f)[str(f).rfind('.'):].lower() in AssetPicker.FILE_EXTENSIONS[type]]
                 for asset in asset_paths:
                     self.items.append(Asset(asset, asset, None))
 
@@ -80,6 +106,8 @@ class AssetPicker():
                 if i % dx == 0:
                     pos.x = 0.0
                     pos.y += AssetPicker.ASSET_DISPLAY_SIZE.y + AssetPicker.ASSET_SPACING.y
+            else:
+                print(f"AssetPicker: Cannot show invalid path of {str(path)}.")
 
 
     def touch(self, mouse: Cursor):
@@ -98,7 +126,4 @@ class AssetPicker():
                 item.sprite.colour = [1.0] * 4
 
     def draw(self, dt: float):
-        pass
-        
-            
-       
+        self.font.draw(f"Pick from {len(self.items)} items of type {self.type} @ {str(self.path)}", 7, self.draw_pos, [1.0] * 4)

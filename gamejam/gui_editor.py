@@ -107,8 +107,8 @@ class GuiEditor():
         # Ctrl-S to serialize gui to yaml file
         input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.to_file, {"editor": self})
 
-        # S for source asset
-        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.show_asset_picker, {"editor": self})
+        # I for input source asset
+        input.add_key_mapping(73, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.show_asset_picker, {"editor": self})
 
         # Direction keys to move around the widget hierachy
         input.add_key_mapping(264, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "down"})
