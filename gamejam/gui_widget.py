@@ -40,6 +40,8 @@ class GuiWidget(Widget):
         self.font = font
         self.text = ""
         self.text_size = 0
+        self.size_to_text = False
+        self.text_dimensions = Coord2d()
         self.text_align = Alignment(AlignX.Centre, AlignY.Middle)
         self.text_offset = Coord2d()
         self.text_col = [1.0, 1.0, 1.0, 1.0]
@@ -216,7 +218,9 @@ class GuiWidget(Widget):
 
         if len(self.text) > 0 and self.font is not None:
             text_offset = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)                
-            self.font.draw(self.text, self.text_size, text_offset, self.text_col)
+            self.text_dimensions = self.font.draw(self.text, self.text_size, text_offset, self.text_col)
+            if self.size_to_text:
+                self.set_size(self.text_dimensions)
 
 
     def dump(self, stream):

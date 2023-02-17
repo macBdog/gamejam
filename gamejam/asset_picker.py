@@ -41,15 +41,18 @@ class AssetPicker():
     def __init__(self, editor: Gui, graphics: Graphics, input: Input, font: Font):
         super().__init__()
         self.editor = editor
+        self.gui = Gui("AssetPicker", graphics, font, False)
         self.type = AssetType.TEXTURE
         self.path = None
         self.dirs = []
         self.display_ratio = graphics.display_ratio
         self.font = font
-        self.draw_pos = Coord2d(-0.85, 0.85)
         self.close()
         self._init_debug_bindings(input)
 
+        self.title = self.gui.add_create_text_widget(self.font, "Pick a source item:", 6, Coord2d(0.15, -0.15))
+        self.title.size_to_text = True
+        self.title.set_align(Alignment(AlignX.Left, AlignY.Top))
 
     def close(self):
         self.active = False
@@ -57,6 +60,8 @@ class AssetPicker():
         self.hovered_item_id = -1
         self.hovered_item = None
         self.selected_item = None
+        self.gui.active_draw = True
+        self.gui.active_input = True
 
 
     def _init_debug_bindings(self, input: Input):
@@ -73,24 +78,33 @@ class AssetPicker():
 
     def show(self, type: AssetType, path: Path, keep_last_valid_path=True):
         if self.type is not AssetType.NONE:
+            self.title.set_text(f"Pick from {len(self.items)} items of type {self.type} @ {str(self.path)}", 6)
+
+            keep_existing_dirs = path != self.path
             if self.path is None:
                 self.path = path
             elif not keep_last_valid_path:
                 self.path = path
 
             if self.path.exists() and self.path.is_dir():
+                if not keep_existing_dirs:
+                    for dir in self.dirs:
+                        self.gui.delete_widget(dir)
+                    self.dirs = []
                 self.type = type
                 self.active = True
-                dir_names = [str(f) for f in path.iterdir() if f.is_dir() and str(f)[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
+                self.gui.active_draw = True
+                self.gui.active_input = True
+                dir_names = [f.name for f in path.iterdir() if f.is_dir() and f.name[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
                 for i, dir in enumerate(dir_names):
-                    dir_widget = GuiWidget(dir, self.font)
-                    dir_widget.set_text(dir, 6)
-                    dir_widget.set_offset(self.draw_pos + Coord2d(0.5, i*0.06))
+                    dir_widget = self.gui.add_create_text_widget(self.font, dir, 6, Coord2d(0.75, i*-0.06))
                     dir_widget.set_action(AssetPicker.change_dir, {"picker": self, "dir": dir})
                     self.dirs.append(dir_widget)
                 asset_paths = [f for f in path.iterdir() if str(f)[str(f).rfind('.'):].lower() in AssetPicker.FILE_EXTENSIONS[type]]
                 for asset in asset_paths:
                     self.items.append(Asset(asset, asset, None))
+            else:
+                print(f"AssetPicker: Cannot show invalid path of {str(path)}.")
 
             num_items = len(self.items)
             dx = num_items // 2
@@ -106,11 +120,11 @@ class AssetPicker():
                 if i % dx == 0:
                     pos.x = 0.0
                     pos.y += AssetPicker.ASSET_DISPLAY_SIZE.y + AssetPicker.ASSET_SPACING.y
-            else:
-                print(f"AssetPicker: Cannot show invalid path of {str(path)}.")
 
 
     def touch(self, mouse: Cursor):
+        self.gui.touch(mouse)
+
         self.hovered_item_id = -1
         self.hovered_item = None
         for item in self.items:
@@ -126,4 +140,4 @@ class AssetPicker():
                 item.sprite.colour = [1.0] * 4
 
     def draw(self, dt: float):
-        self.font.draw(f"Pick from {len(self.items)} items of type {self.type} @ {str(self.path)}", 7, self.draw_pos, [1.0] * 4)
+        self.gui.draw(dt)

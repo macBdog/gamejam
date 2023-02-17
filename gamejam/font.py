@@ -151,7 +151,7 @@ class Font():
         # Create EBO
         self.EBO = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.EBO)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.graphics.default_indices, GL_STATIC_DRAW)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24, self.graphics.default_indices, GL_STATIC_DRAW)
 
         shader_font = graphics.get_program(Shader.FONT)
         self.vertex_pos_id = glGetAttribLocation(shader_font, "VertexPosition")
@@ -172,7 +172,7 @@ class Font():
         self.projection_mat = glGetUniformLocation(shader_font, "ProjectionMatrix")
 
 
-    def draw(self, string: str, font_size: int, pos: Coord2d, colour: list):
+    def draw(self, string: str, font_size: int, pos: Coord2d, colour: list) -> Coord2d:
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
         shader_font = self.graphics.get_program(Shader.FONT)
         glUseProgram(shader_font)
@@ -213,4 +213,6 @@ class Font():
             glUniform2f(self.char_size_id, tex_size[0], tex_size[1])
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
-            draw_pos.x = draw_pos.x + ((self.advance[c] * display_size) / self.window_ratio) 
+            draw_pos.x = draw_pos.x + ((self.advance[c] * display_size) / self.window_ratio)
+
+        return draw_pos - pos

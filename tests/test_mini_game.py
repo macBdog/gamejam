@@ -32,10 +32,10 @@ class MiniGame(GameJam):
         num = kwargs["num"]
         if num == game.magic_number:
             game.score += 10
-            game.particles.spawn(2.5, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [0.1, 1.0, 0.1, 1.0])
+            game.particles.spawn(0.5, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [0.1, 1.0, 0.1, 1.0])
         else:
             game.score -= 1
-            game.particles.spawn(0.55, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [1.0, 0.1, 0.1, 1.0])
+            game.particles.spawn(2.0, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [1.0, 0.1, 0.1, 1.0])
         MiniGame.reset(game, reset_score=False)
 
 
