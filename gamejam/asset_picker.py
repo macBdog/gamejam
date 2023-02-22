@@ -50,9 +50,10 @@ class AssetPicker():
         self.close()
         self._init_debug_bindings(input)
 
-        self.title = self.gui.add_create_text_widget(self.font, "Pick a source item:", 6, Coord2d(0.15, -0.15))
+        self.title = self.gui.add_create_text_widget(self.font, "Pick a source item:", 6, Coord2d(0.05, -0.05))
+        self.title.name = "AssetPicker title"
         self.title.size_to_text = True
-        self.title.set_align(Alignment(AlignX.Left, AlignY.Top))
+        self.title.set_align(Alignment(AlignX.Left, AlignY.Middle))
 
     def close(self):
         self.active = False
@@ -98,6 +99,7 @@ class AssetPicker():
                 dir_names = [f.name for f in path.iterdir() if f.is_dir() and f.name[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
                 for i, dir in enumerate(dir_names):
                     dir_widget = self.gui.add_create_text_widget(self.font, dir, 6, Coord2d(0.75, i*-0.06))
+                    dir_widget.name = f"AssetPickerDir_{dir}"
                     dir_widget.set_action(AssetPicker.change_dir, {"picker": self, "dir": dir})
                     self.dirs.append(dir_widget)
                 asset_paths = [f for f in path.iterdir() if str(f)[str(f).rfind('.'):].lower() in AssetPicker.FILE_EXTENSIONS[type]]

@@ -16,7 +16,7 @@ class Gui(Widget):
     """Manager style functionality for a collection of widget classes.
     Also convenience functions for window handling and display of position hierarchy."""
 
-    def __init__(self, name: str, graphics: Graphics, debug_font: Font, restore_from_file:bool=True):
+    def __init__(self, name: str, graphics: Graphics, debug_font: Font, restore_from_file: bool = True):
         super().__init__()
         self.name = name
         self.active_draw = False

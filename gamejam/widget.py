@@ -33,12 +33,15 @@ def widget_dirty(func):
 class Widget():
     """A widget is a position-based hierarchical node. It's an empty anchor 
     without any utility. For drawing textures, font and interactions see GuiWidget."""
+
     def __init__(self, name: str=""):
         # Draw pos automatically gets refreshed when the dirty flag is set
+        self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
+
+        self._parent = None
+        self._children = []
         self._dirty = True
         self._draw_pos = Coord2d()
-        self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
-        
         self._offset = Coord2d()
         self._size = Coord2d(0.1, 0.1)
 
@@ -47,10 +50,6 @@ class Widget():
 
         # What part of the parent this widget positions relative to
         self._align_to = Alignment(AlignX.Centre, AlignY.Middle)
-        
-        # Hierarchy
-        self._parent = None
-        self._children = []
 
 
     def draw(self, dt: float):

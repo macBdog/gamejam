@@ -16,7 +16,7 @@ class GameWithGui(GameJam):
         super().prepare()
 
         self.font = Font(os.path.join("gamejam", "res", "consola.ttf"), self.graphics, self.window)
-        test_gui = Gui("test_gui", self.graphics, self.font)
+        test_gui = Gui("test_gui", self.graphics, self.font, False)
         test_gui.set_active(True, True)
 
         self.gui.add_child(test_gui)

@@ -41,11 +41,14 @@ class GuiWidget(Widget):
         self.text = ""
         self.text_size = 0
         self.size_to_text = False
-        self.text_dimensions = Coord2d()
         self.text_align = Alignment(AlignX.Centre, AlignY.Middle)
         self.text_offset = Coord2d()
         self.text_col = [1.0, 1.0, 1.0, 1.0]
         self.animation = None
+
+        self._text_dirty = False
+        self._text_dimensions = None
+        self._text_draw_pos = Coord2d()
 
 
     @staticmethod
@@ -100,12 +103,14 @@ class GuiWidget(Widget):
 
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None):
+        self._text_dirty = text != self.text or self.text_size != text_size
         self.text = text
         self.text_size = text_size
         if align is not None:
             self.text_align = align
         if offset is not None:
             self.text_offset = offset
+        
 
 
     def set_text_colour(self, colour: list):
@@ -217,10 +222,14 @@ class GuiWidget(Widget):
             self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            text_offset = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)                
-            self.text_dimensions = self.font.draw(self.text, self.text_size, text_offset, self.text_col)
-            if self.size_to_text:
-                self.set_size(self.text_dimensions)
+            text_dim = self.font.draw(self.text, self.text_size, self.text_offset, self.text_col)
+
+            if self._text_dirty:
+                self._text_draw_pos = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)
+
+                if self.size_to_text:
+                    self._text_dimensions = text_dim
+                    self.set_size(self._text_dimensions)
 
 
     def dump(self, stream):
@@ -241,6 +250,7 @@ class GuiWidget(Widget):
                     child_name = next(iter(child))
                     child_widget = GuiWidget(child_name)
                     GuiWidget.deserialize(child_widget, child[child_name])
-                    self._children.append(child_widget)
+                    self.add_child(child_widget)
+
         else:
             logging.error(f"Widget load error! Trying to restore a widget named {self.name} from a stream called {stream.name}")
