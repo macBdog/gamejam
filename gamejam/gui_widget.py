@@ -40,7 +40,6 @@ class GuiWidget(Widget):
         self.font = font
         self.text = ""
         self.text_size = 0
-        self.size_to_text = False
         self.text_align = Alignment(AlignX.Centre, AlignY.Middle)
         self.text_offset = Coord2d()
         self.text_col = [1.0, 1.0, 1.0, 1.0]
@@ -49,6 +48,13 @@ class GuiWidget(Widget):
         self._text_dirty = False
         self._text_dimensions = None
         self._text_draw_pos = Coord2d()
+        self._size_to_text = False
+
+
+    def set_size_to_text(self, enabled:bool=True):
+        if enabled != self._size_to_text:
+            self._dirty = True
+        self._size_to_text = enabled
 
 
     @staticmethod
@@ -110,7 +116,6 @@ class GuiWidget(Widget):
             self.text_align = align
         if offset is not None:
             self.text_offset = offset
-        
 
 
     def set_text_colour(self, colour: list):
@@ -227,7 +232,7 @@ class GuiWidget(Widget):
             if self._text_dirty:
                 self._text_draw_pos = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)
 
-                if self.size_to_text:
+                if self._size_to_text:
                     self._text_dimensions = text_dim
                     self.set_size(self._text_dimensions)
 

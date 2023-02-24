@@ -3,6 +3,11 @@ from abc import ABC, abstractmethod
 
 class Coord(ABC):
     @abstractmethod
+    def __repr__(self):
+        pass
+
+
+    @abstractmethod
     def __add__(self, other):
         pass
 
@@ -29,7 +34,6 @@ class Coord(ABC):
     @abstractmethod
     def from_string(self, string: str):
         pass
-
 
 
     @abstractmethod
@@ -65,6 +69,10 @@ class Coord2d(Coord):
     def __init__(self, x_val:float=0.0, y_val: float=0.0):
         self.x = x_val
         self.y = y_val
+
+
+    def __repr__(self) -> str:
+        return f"{self.x}, {self.y}"
 
 
     def __add__(self, other):
@@ -115,6 +123,10 @@ class Coord3d(Coord):
         self.x = x_val
         self.y = y_val
         self.z = z_val
+
+
+    def __repr__(self) -> str:
+        return f"{self.x}, {self.y}, {self.z}"
 
 
     def __add__(self, other):

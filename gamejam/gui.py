@@ -58,7 +58,7 @@ class Gui(Widget):
         return widget
 
 
-    def add_create_text_widget(self, font:Font, text:str, size:int, offset:Coord2d=None, name:str="") -> Widget:
+    def add_create_text_widget(self, font:Font, text:str, size:int, offset:Coord2d=None, name:str="") -> GuiWidget:
         widget = GuiWidget(name=name, font=font)
         widget.set_size(Coord2d(0.25, 0.1))
         widget.set_text(text, size, offset)

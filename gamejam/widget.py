@@ -1,3 +1,4 @@
+from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 import functools
@@ -114,7 +115,7 @@ class Widget():
         │       BottomRight│
         └──────────────────┘  
         """
-        draw_pos = offset
+        draw_pos = copy(offset)
 
         # Self alignment X
         if align.x == AlignX.Left:
