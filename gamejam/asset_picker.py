@@ -10,7 +10,7 @@ from gamejam.cursor import Cursor
 from gamejam.font import Font
 from gamejam.input import Input
 from gamejam.graphics import Graphics
-from gamejam.texture import Sprite, SpriteShape, SpriteTexture
+from gamejam.texture import Sprite, SpriteShape, SpriteTexture, Texture
 from gamejam.gui import Gui
 
 
@@ -29,8 +29,8 @@ class Asset:
 
 class AssetPicker():
     """Selectable grid of textures and other assets used with GuiEditor."""
-    ASSET_DISPLAY_SIZE = Coord2d(0.02, 0.02)
-    ASSET_SPACING = Coord2d(0.005, 0.005)
+    ASSET_DISPLAY_SIZE = Coord2d(0.12, 0.12)
+    ASSET_SPACING = Coord2d(0.05, 0.05)
     IGNORED_DIR_PREFIX = [".", "_"]
     FILE_EXTENSIONS = {
         AssetType.TEXTURE: [ ".png", ".jpg", ".tga" ],
@@ -40,6 +40,7 @@ class AssetPicker():
 
     def __init__(self, editor: Gui, graphics: Graphics, input: Input, font: Font):
         super().__init__()
+        self.graphics = graphics
         self.editor = editor
         self.gui = Gui("AssetPicker", graphics, font, False)
         self.type = AssetType.TEXTURE
@@ -50,10 +51,10 @@ class AssetPicker():
         self.close()
         self._init_debug_bindings(input)
 
-        self.title = self.gui.add_create_text_widget(self.font, "Pick a source item:", 6, Coord2d(0.05, -0.05))
-        self.title.name = "AssetPicker title"
+        self.title = self.gui.add_create_text_widget(self.font, "Pick a source item:", 6, Coord2d(0.15, -0.05), "AssetPicker title")
         self.title.set_size_to_text()
         self.title.set_align(Alignment(AlignX.Left, AlignY.Middle))
+        self.title.set_align_to(Alignment(AlignX.Left, AlignY.Top))
 
     def close(self):
         self.active = False
@@ -81,27 +82,42 @@ class AssetPicker():
         if self.type is not AssetType.NONE:
             self.title.set_text(f"Pick from {len(self.items)} items of type {self.type} @ {str(self.path)}", 6)
 
-            keep_existing_dirs = path != self.path
+            replace_existing_dirs = path != self.path
             if self.path is None:
                 self.path = path
-            elif not keep_last_valid_path:
-                self.path = path
+            else:
+                if ".." in path.name:
+                    self.path = self.path.parent
+                else:
+                    self.path = self.path / path
+                if not keep_last_valid_path:
+                    self.path = path
 
             if self.path.exists() and self.path.is_dir():
-                if not keep_existing_dirs:
+                if replace_existing_dirs:
                     for dir in self.dirs:
                         self.gui.delete_widget(dir)
                     self.dirs = []
+
+                    for item in self.items:
+                        self.gui.delete_widget(item)
+                    self.items = []
                 self.type = type
                 self.active = True
                 self.gui.active_draw = True
                 self.gui.active_input = True
-                dir_names = [f.name for f in path.iterdir() if f.is_dir() and f.name[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
-                for i, dir in enumerate(dir_names):
-                    dir_widget = self.gui.add_create_text_widget(self.font, dir, 6, Coord2d(0.05, i*-0.06))
-                    dir_widget.name = f"AssetPickerDir_{dir}"
+
+                def add_dir(dir:str, id:int):
+                    dir_widget = self.gui.add_create_text_widget(self.font, dir, 6, Coord2d(0.05, -0.15 - id*0.07), f"AssetPickerDir_{dir}")
+                    dir_widget.set_align_to(Alignment(AlignX.Left, AlignY.Top))
                     dir_widget.set_action(AssetPicker.change_dir, {"picker": self, "dir": dir})
                     self.dirs.append(dir_widget)
+
+                add_dir(f"..", 0)
+
+                dir_names = [f.name for f in path.iterdir() if f.is_dir() and f.name[0:1] not in AssetPicker.IGNORED_DIR_PREFIX]
+                for i, dir in enumerate(dir_names):
+                    add_dir(dir, i + 1)
                 asset_paths = [f for f in path.iterdir() if str(f)[str(f).rfind('.'):].lower() in AssetPicker.FILE_EXTENSIONS[type]]
                 for asset in asset_paths:
                     self.items.append(Asset(asset, asset, None))
@@ -113,13 +129,16 @@ class AssetPicker():
             dy = num_items // 2
             pos = Coord2d()
             for i in range(num_items):
+                texture_path = self.items[i].path
+                print(f"Loading texture from: {texture_path.name}")
                 if type is AssetType.TEXTURE:
-                    self.items[i].sprite = SpriteTexture(self.graphics, self.items[i].path, [0.75] * 4, pos, AssetPicker.ASSET_DISPLAY_SIZE)
+                    self.items[i].sprite = SpriteTexture(self.graphics, Texture(texture_path), [0.75] * 4, pos, AssetPicker.ASSET_DISPLAY_SIZE)
                 else:
                     self.items[i].sprite = SpriteShape(self.graphics, [0.75] * 4, pos)
-                self.items[i].pos = pos
+                item_widget = self.gui.add_create_widget(self.items[i].sprite, self.font, texture_path.name)
+                item_widget.set_offset(pos)
                 pos.x += AssetPicker.ASSET_DISPLAY_SIZE.x + AssetPicker.ASSET_SPACING.x
-                if i % dx == 0:
+                if dx > 0 and i % dx == 0:
                     pos.x = 0.0
                     pos.y += AssetPicker.ASSET_DISPLAY_SIZE.y + AssetPicker.ASSET_SPACING.y
 

@@ -172,6 +172,11 @@ class Font():
         self.projection_mat = glGetUniformLocation(shader_font, "ProjectionMatrix")
 
 
+    def get_line_display_height(self, font_size: int):
+        display_size = font_size * 0.0000005
+        return self.line_height * display_size
+
+
     def draw(self, string: str, font_size: int, pos: Coord2d, colour: list) -> Coord2d:
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
         shader_font = self.graphics.get_program(Shader.FONT)
@@ -215,4 +220,6 @@ class Font():
 
             draw_pos.x = draw_pos.x + ((self.advance[c] * display_size) / self.window_ratio)
 
-        return draw_pos - pos
+        text_dim = draw_pos - pos
+        text_dim.y = max(abs(text_dim.y), self.line_height * display_size)
+        return text_dim

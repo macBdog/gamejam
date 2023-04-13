@@ -171,9 +171,8 @@ class SpriteTexture(Sprite):
 
 
 class TextureManager:
-    """The textures class handles loading and management of
-    all image resources for the game. The idea is that textures
-    are loaded on demand and stay loaded until explicitly unloaded
+    """The textures class handles loading and management of all image resources for the game.
+    The idea is that textures are loaded on demand and stay loaded until explicitly unloaded
     or the game is shutdown."""
 
     def __init__(self, base, graphics):
@@ -198,3 +197,36 @@ class TextureManager:
 
     def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
         return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), colour, pos, size, shader)
+
+
+class TextureAtlas:
+    """A texture atlas is a composite of multiple textures into one larger The orignal 
+    textures can be access by name """
+
+    def __init__(self, default_width:int=2048, default_height:int=2048):
+        self.img_data = numpy.array([0] * 4) * default_width * default_height
+        self.width = default_width
+        self.height = default_height
+        self.texture_id = glGenTextures(1)
+        self.textures = {}
+
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
+
+
+    def add_texture(self, texture_path: str) -> bool:
+        """Composite a texture into the atlas an add it to the dictionary of textures."""
+        if os.path.exists(texture_path):
+            image = Image.open(texture_path)
+            width = self.image.width
+            height = self.image.height
+            size = Coord2d(width, height)
+            pos = Coord2d(0.0, 0.0)
+
+            if width < self.width and height < self.height:
+                img_data = numpy.array(list(image.getdata()), numpy.uint8)
+                self.textures["texture_path"] =  [pos, size]

@@ -99,6 +99,7 @@ class GuiWidget(Widget):
             self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
         self.text_col[3] = self.alpha_start + self.alpha_hover
+        self._text_draw_pos += Coord2d(0.01, -0.01)
 
 
     def hover_end_default(self):
@@ -106,6 +107,7 @@ class GuiWidget(Widget):
             self.sprite.set_alpha(self.alpha_start)
 
         self.text_col[3] = self.alpha_start
+        self._text_draw_pos -= Coord2d(0.01, -0.01)
 
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None):
@@ -227,9 +229,10 @@ class GuiWidget(Widget):
             self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            text_dim = self.font.draw(self.text, self.text_size, self.text_offset, self.text_col)
+            text_dim = self.font.draw(self.text, self.text_size, self._text_draw_pos, self.text_col)
 
             if self._text_dirty:
+                self._text_dirty = False
                 self._text_draw_pos = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)
 
                 if self._size_to_text:

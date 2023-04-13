@@ -35,6 +35,14 @@ class Widget():
     """A widget is a position-based hierarchical node. It's an empty anchor 
     without any utility. For drawing textures, font and interactions see GuiWidget."""
 
+    def __repr__(self) -> str:
+        return self.name
+
+
+    def __contains__(self, widget) -> bool:
+        return widget in self._children
+
+
     def __init__(self, name: str=""):
         # Draw pos automatically gets refreshed when the dirty flag is set
         self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
@@ -64,7 +72,7 @@ class Widget():
 
 
     def add_child(self, child):
-        if child not in self._children and child._parent == None:
+        if child not in self and child._parent == None:
             child._parent = self
             self._children.append(child)
         else:
@@ -134,13 +142,13 @@ class Widget():
 
             # Alignment to parent X
             if align_to.x == AlignX.Left:
-                draw_pos.x += parent._size.x * 0.5
-            elif align_to.x == AlignX.Right:
                 draw_pos.x -= parent._size.x * 0.5
+            elif align_to.x == AlignX.Right:
+                draw_pos.x += parent._size.x * 0.5
 
             # Alignment to parent Y
             if align_to.y == AlignY.Top:
-                draw_pos.y -= parent._size.y * 0.5
-            elif align_to.y == AlignY.Bottom:
                 draw_pos.y += parent._size.y * 0.5
+            elif align_to.y == AlignY.Bottom:
+                draw_pos.y -= parent._size.y * 0.5
         return draw_pos

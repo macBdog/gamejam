@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from pathlib import Path
+from typing import List
 
 from gamejam.asset_picker import AssetPicker, AssetType
 from gamejam.widget import Alignment, AlignX, AlignY
@@ -13,6 +14,7 @@ from gamejam.input import Input, InputActionKey, InputActionModifier
 from gamejam.graphics import Graphics, Shader, ShaderType
 from gamejam.texture import SpriteTexture, Texture
 from gamejam.gui import Gui
+from gamejam.gui_widget import GuiWidget
 
 from OpenGL.GL import (
     glGetUniformLocation,
@@ -34,6 +36,8 @@ class GuiEditMode(Enum):
     PARENT = 6,
     ALIGN = 7,
     ALIGN_TO = 8,
+    NAME = 9,
+    TEXT = 10,
 
 
 class GuiEditor():
@@ -44,6 +48,7 @@ class GuiEditor():
         super().__init__()
         self.main_gui = main_gui
         self.mode = GuiEditMode.NONE
+        self.gui = Gui("GuiEditor", graphics, font, False)
         self.display_ratio = graphics.display_ratio
         self.font = font
         self.edit_start_pos = Coord2d()
@@ -88,19 +93,6 @@ class GuiEditor():
         # Ctrl+X to remove selected widget
         input.add_key_mapping(88, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.remove_widget, {"editor": self})
 
-        # O and S for modifying widget offset and size
-        input.add_key_mapping(79, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.OFFSET})
-        input.add_key_mapping(83, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.SIZE})
-
-        # F and T for text offset and size
-        input.add_key_mapping(70, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.TEXT_SIZE})
-        input.add_key_mapping(84, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.TEXT_OFFSET})
-
-        # P, A and Ctrl-A for alignment
-        input.add_key_mapping(80, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.PARENT})
-        input.add_key_mapping(64, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.ALIGN})
-        input.add_key_mapping(64, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.toggle_edit_mode, {"editor": self, "mode": GuiEditMode.ALIGN})
-
         # Ctrl-G to enable gui editing mode
         input.add_key_mapping(71, InputActionKey.ACTION_KEYDOWN, InputActionModifier.LCTRL, GuiEditor.toggle_gui_mode, {"editor": self})
 
@@ -115,6 +107,15 @@ class GuiEditor():
         input.add_key_mapping(265, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "up"})
         input.add_key_mapping(262, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "right"})
         input.add_key_mapping(263, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "left"})
+
+        # Add a button for each different editor property
+        self.edit_buttons:List[GuiWidget] = []
+        for e in GuiEditMode:
+            if e != GuiEditMode.NONE and e != GuiEditMode.INSPECT:
+                edit_widget = self.gui.add_create_text_widget(self.font, f"Set {e.name.lower()}", 6, Coord2d(0.15 * e.value[0], 0.15), e.name)
+                edit_widget.set_align(Alignment(AlignX.Left, AlignY.Middle))
+                edit_widget.set_align_to(Alignment(AlignX.Left, AlignY.Bottom))
+                edit_widget.set_action(GuiEditor.toggle_edit_mode, {"editor": self, "mode": e.value})
 
 
     @staticmethod
@@ -156,7 +157,7 @@ class GuiEditor():
         editor.mode = GuiEditMode.NONE if editor.mode != GuiEditMode.NONE else GuiEditMode.INSPECT
         if editor.mode and editor.gui_to_edit is None:
             editor.gui_to_edit = editor.main_gui
-    
+
 
     @staticmethod
     def to_file(**kwargs):
@@ -198,7 +199,9 @@ class GuiEditor():
             if editor.widget_to_edit is not None:
                 editor.gui.remove_widget(editor.widget_to_edit)
                 editor.widget_to_edit = None
-                
+                editor.gui.active_draw = False
+                editor.gui.active_input = False
+
 
     @staticmethod
     def toggle_edit_mode(**kwargs):
@@ -224,6 +227,8 @@ class GuiEditor():
     def deselect(self):
         self.widget_to_edit = None
         self.mode = GuiEditMode.INSPECT
+        self.gui.active_draw = False
+        self.gui.active_input = False
 
 
     def _get_align_hover(self, mouse_pos: Coord2d, widget: any) -> int:
@@ -265,6 +270,8 @@ class GuiEditor():
             return
 
         if self.widget_to_edit is not None:
+            self.gui.touch(mouse)
+
             self._align_hover = self._get_align_hover(mouse.pos, self.widget_to_edit)
 
             if self.edit_start_pos is None:
@@ -294,6 +301,8 @@ class GuiEditor():
                     if self.widget_to_edit is None:
                         if touch_state == TouchState.Touched:
                             self.widget_to_edit = child
+                            self.gui.active_draw = True
+                            self.gui.active_input = True
 
                             # Changing the alignment
                             if self.align_hover > 0:
@@ -356,10 +365,13 @@ class GuiEditor():
             self.picker.draw(dt)
             return
 
+        if self.widget_to_edit is not None:
+            self.gui.draw(dt)
+
         selection_draw_pos = Coord2d(-0.75, 0.75)
         self.font.draw(self.mode.name, 8, selection_draw_pos + Coord2d(0.0, 0.1), [1.0, 0.75, 1.0, 0.5])
         self._draw_gui_selection(self.main_gui, selection_draw_pos)
-        
+
         def debug_widget_uniforms():
             glUniform1f(self.display_ratio_id, self.display_ratio)
             glUniform1i(self.debug_selected_id, selected_widget_id)
