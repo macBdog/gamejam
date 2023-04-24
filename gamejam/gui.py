@@ -5,11 +5,10 @@ from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
 from gamejam.font import Font
-from gamejam.graphics import Graphics, Shader, ShaderType
-from gamejam.settings import GameSettings
+from gamejam.graphics import Graphics
 from gamejam.texture import SpriteTexture
 from gamejam.widget import Widget
-from gamejam.gui_widget import GuiWidget
+from gamejam.gui_widget import GuiWidget, TouchState
 
 
 class Gui(Widget):
@@ -73,14 +72,19 @@ class Gui(Widget):
             self._children.remove(widget)
 
 
-    def touch(self, mouse: Cursor):
+    def touch(self, mouse: Cursor) -> TouchState:
+        state = TouchState.Clear
         if self.cursor is None:
             self.cursor = mouse
 
         if self.active_input:
             for child in self._children:
                 if hasattr(child, "touch"):
-                    child.touch(mouse)
+                    this_touch = child.touch(mouse)
+                    if this_touch != TouchState.Clear:
+                        state = this_touch
+
+        return state
 
 
     def draw(self, dt: float):

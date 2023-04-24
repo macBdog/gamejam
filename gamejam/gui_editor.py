@@ -112,10 +112,10 @@ class GuiEditor():
         self.edit_buttons:List[GuiWidget] = []
         for e in GuiEditMode:
             if e != GuiEditMode.NONE and e != GuiEditMode.INSPECT:
-                edit_widget = self.gui.add_create_text_widget(self.font, f"Set {e.name.lower()}", 6, Coord2d(0.15 * e.value[0], 0.15), e.name)
+                edit_widget = self.gui.add_create_text_widget(self.font, f"Set {e.name.lower()}", 6, Coord2d(0.2 * e.value[0], 0.05), e.name)
                 edit_widget.set_align(Alignment(AlignX.Left, AlignY.Middle))
                 edit_widget.set_align_to(Alignment(AlignX.Left, AlignY.Bottom))
-                edit_widget.set_action(GuiEditor.toggle_edit_mode, {"editor": self, "mode": e.value})
+                edit_widget.set_action(GuiEditor.toggle_edit_mode, {"editor": self, "mode": e})
 
 
     @staticmethod
@@ -212,6 +212,10 @@ class GuiEditor():
                 editor.mode = mode
                 if editor.mode == GuiEditMode.PARENT:
                     editor.widget_to_set_parent = editor.widget_to_edit
+                elif editor.mode == GuiEditMode.NAME:
+                    editor.gui.cursor.set_text_edit(editor.widget_to_edit.name, editor.widget_to_edit._draw_pos)
+                elif editor.mode == GuiEditMode.TEXT:
+                    editor.gui.cursor.set_text_edit(editor.widget_to_edit.text, editor.widget_to_edit._draw_pos)
             else:
                 editor.mode = GuiEditMode.INSPECT
                 editor.edit_start_pos = None
@@ -269,8 +273,10 @@ class GuiEditor():
             self.picker.touch(mouse)
             return
 
+        touched_widget = False
         if self.widget_to_edit is not None:
-            self.gui.touch(mouse)
+            if self.gui.touch(mouse) != TouchState.Clear:
+                touched_widget = True
 
             self._align_hover = self._get_align_hover(mouse.pos, self.widget_to_edit)
 
@@ -282,8 +288,7 @@ class GuiEditor():
                     self.widget_to_edit.set_offset(edit_diff)
                 elif self.mode is GuiEditMode.SIZE:
                         self.widget_to_edit.set_size(edit_diff)
-            
-        touched_widget = False
+
         self.widget_to_hover = None
         for _, child in enumerate(self.gui_to_edit._children):
             if type(child) is Gui:

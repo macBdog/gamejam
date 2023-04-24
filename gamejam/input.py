@@ -3,6 +3,7 @@ from enum import Enum
 
 from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
+from gamejam.font import Font
 from gamejam.settings import GameSettings
 from gamejam.quickmaff import clamp
 
@@ -32,10 +33,10 @@ class InputMethod(Enum):
 class Input:
     """Utility class to handle different methods of input to the game, handles all events from the window system."""
 
-    def __init__(self, window, method: InputMethod):
+    def __init__(self, window, method: InputMethod, font: Font):
         self.method = method
         self.window = window
-        self.cursor = Cursor()
+        self.cursor = Cursor(font)
         self.keys_down = {}
         self.key_mapping = {}
         self.scroll_mapping = []
@@ -98,6 +99,9 @@ class Input:
     def handle_input_key(self, window, key: int, scancode: int, action: int, mods: int):
         if GameSettings.DEV_MODE:
             print(f"Input event log key[{key}], scancode[{scancode}], action[{action}], mods[{mods}]")
+
+        if self.cursor.is_text_edit_active():
+            self.cursor.handle_input_key(window, key, scancode, action, mods)
 
         # Update the state of each key
         if action == InputActionKey.ACTION_KEYDOWN.value:

@@ -60,8 +60,10 @@ class GameJam:
 
         # Now we have an OpenGL context we can compile GPU programs
         self.graphics = Graphics(self.window_width / self.window_height)
+        font_path = Path(__file__).parent / "res" / "consola.ttf"
+        self.font = Font(str(font_path), self.graphics, self.window)
         self.textures = TextureManager(texture_path, self.graphics)
-        self.input = Input(self.window, InputMethod.KEYBOARD)
+        self.input = Input(self.window, InputMethod.KEYBOARD, self.font)
         self.particles = Particles(self.graphics)
         self.profile = Profile()
 
@@ -97,9 +99,6 @@ class GameJam:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     
         glfw.swap_interval(GameSettings.VSYNC)
-
-        font_path = Path(__file__).parent / "res" / "consola.ttf"
-        self.font = Font(str(font_path), self.graphics, self.window)
 
         self.gui = Gui("main", self.graphics, self.font, False)
         self.gui.set_active(True, True)
