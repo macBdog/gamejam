@@ -109,10 +109,17 @@ class GuiEditor():
         input.add_key_mapping(263, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, self.change_gui_edit, {"editor": self, "dir": "left"})
 
         # Add a button for each different editor property
+        edit_buttons_pos = Coord2d(-0.5, 0.05)
         self.edit_buttons:List[GuiWidget] = []
         for e in GuiEditMode:
             if e != GuiEditMode.NONE and e != GuiEditMode.INSPECT:
-                edit_widget = self.gui.add_create_text_widget(self.font, f"Set {e.name.lower()}", 6, Coord2d(0.2 * e.value[0], 0.05), e.name)
+                edit_widget = self.gui.add_create_text_widget(
+                    font=self.font, 
+                    text=f"Set {e.name.lower()}",
+                    size=6, 
+                    offset=edit_buttons_pos + Coord2d(0.2 * e.value[0], 0.0),
+                    name=e.name
+                )
                 edit_widget.set_align(Alignment(AlignX.Left, AlignY.Middle))
                 edit_widget.set_align_to(Alignment(AlignX.Left, AlignY.Bottom))
                 edit_widget.set_action(GuiEditor.toggle_edit_mode, {"editor": self, "mode": e})
@@ -213,12 +220,38 @@ class GuiEditor():
                 if editor.mode == GuiEditMode.PARENT:
                     editor.widget_to_set_parent = editor.widget_to_edit
                 elif editor.mode == GuiEditMode.NAME:
-                    editor.gui.cursor.set_text_edit(editor.widget_to_edit.name, editor.widget_to_edit._draw_pos)
+                    editor.gui.cursor.set_text_edit(
+                        buffer=editor.widget_to_edit.name,
+                        pos=editor.widget_to_edit._draw_pos,
+                        on_commit_func=GuiEditor.on_commit_widget_text,
+                        on_commit_kwargs={
+                            "widget": editor.widget_to_edit,
+                            "mode": editor.mode,
+                        }
+                    )
                 elif editor.mode == GuiEditMode.TEXT:
-                    editor.gui.cursor.set_text_edit(editor.widget_to_edit.text, editor.widget_to_edit._draw_pos)
+                    editor.gui.cursor.set_text_edit(
+                        buffer=editor.widget_to_edit.text, 
+                        pos=editor.widget_to_edit._draw_pos,
+                        on_commit_func=GuiEditor.on_commit_widget_text,
+                        on_commit_kwargs={
+                            "widget": editor.widget_to_edit,
+                            "mode": editor.mode,
+                        })
             else:
                 editor.mode = GuiEditMode.INSPECT
                 editor.edit_start_pos = None
+
+
+    @staticmethod
+    def on_commit_widget_text(**kwargs):
+        widget = kwargs["widget"]
+        mode = kwargs["mode"]
+        text = kwargs["text"]
+        if mode == GuiEditMode.NAME:
+            widget.name = text
+        elif mode == GuiEditMode.TEXT:
+            widget.text = text
 
 
     @staticmethod
