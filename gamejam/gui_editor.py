@@ -225,6 +225,7 @@ class GuiEditor():
                         pos=editor.widget_to_edit._draw_pos,
                         on_commit_func=GuiEditor.on_commit_widget_text,
                         on_commit_kwargs={
+                            "editor": editor,
                             "widget": editor.widget_to_edit,
                             "mode": editor.mode,
                         }
@@ -235,6 +236,7 @@ class GuiEditor():
                         pos=editor.widget_to_edit._draw_pos,
                         on_commit_func=GuiEditor.on_commit_widget_text,
                         on_commit_kwargs={
+                            "editor": editor,
                             "widget": editor.widget_to_edit,
                             "mode": editor.mode,
                         })
@@ -245,20 +247,22 @@ class GuiEditor():
 
     @staticmethod
     def on_commit_widget_text(**kwargs):
+        editor = kwargs["editor"]
         widget = kwargs["widget"]
         mode = kwargs["mode"]
         text = kwargs["text"]
         if mode == GuiEditMode.NAME:
             widget.name = text
         elif mode == GuiEditMode.TEXT:
-            widget.text = text
+            widget.set_text(text=text, text_size=10, font=editor.font)
 
 
     @staticmethod
     def show_asset_picker(**kwargs):
         editor = kwargs["editor"]
-        if editor.widget_to_edit is not None and editor.picker.active is False:
-            editor.picker.show(AssetType.TEXTURE, Path(os.getcwd()))
+        if editor.mode == GuiEditMode.INSPECT:
+            if editor.widget_to_edit is not None and editor.picker.active is False:
+                editor.picker.show(AssetType.TEXTURE, Path(os.getcwd()))
 
 
     def deselect(self):

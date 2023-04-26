@@ -8,7 +8,7 @@ class Cursor:
     KEYCODE_COMMIT = 257
     KEYCODE_CANCEL = 256
     KEYCODE_BACKSPACE = 259
-    KEYCODES_INVALID = [71, 69, 68]
+    KEYCODES_INVALID = [340, 344]
 
     def __init__(self, font: Font):
         self.pos = Coord2d()
@@ -42,18 +42,19 @@ class Cursor:
 
 
     def handle_input_key(self, window, key: int, scancode: int, action: int, mods: int):
-        if key == Cursor.KEYCODE_BACKSPACE:
-            self.text_edit_buffer = self.text_edit_buffer[:-1]
-        elif key not in Cursor.KEYCODES_INVALID:
-            self.text_edit_buffer += chr(key)
-
-        if key == Cursor.KEYCODE_COMMIT:
-            self.text_edit_pos = None
-            if self.text_edit_commit_func is not None:
-                self.text_edit_commit_kwargs.update({"text": self.text_edit_buffer})
-                self.text_edit_commit_func(**self.text_edit_commit_kwargs)
-        elif key == Cursor.KEYCODE_CANCEL:
-            self.text_edit_pos = None
+        if action:
+            if key == Cursor.KEYCODE_COMMIT:
+                self.text_edit_pos = None
+                if self.text_edit_commit_func is not None:
+                    self.text_edit_commit_kwargs.update({"text": self.text_edit_buffer})
+                    self.text_edit_commit_func(**self.text_edit_commit_kwargs)
+            elif key == Cursor.KEYCODE_CANCEL:
+                self.text_edit_pos = None
+            elif key == Cursor.KEYCODE_BACKSPACE:
+                self.text_edit_buffer = self.text_edit_buffer[:-1]
+            elif key not in Cursor.KEYCODES_INVALID:
+                char = chr(key) if mods else chr(key + 32)
+                self.text_edit_buffer += char
 
 
     def set_text_edit(self, buffer: str, pos: Coord2d, on_commit_func=None, on_commit_kwargs=None):

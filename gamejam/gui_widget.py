@@ -110,7 +110,7 @@ class GuiWidget(Widget):
         self._text_draw_pos -= Coord2d(0.01, -0.01)
 
 
-    def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None):
+    def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):
         self._text_dirty = text != self.text or self.text_size != text_size
         self.text = text
         self.text_size = text_size
@@ -118,6 +118,11 @@ class GuiWidget(Widget):
             self.text_align = align
         if offset is not None:
             self.text_offset = offset
+        if self.font is None:
+            if font is None:
+                logging.warning("Setting text on a widget without a font!")
+            else:
+                self.font = font
 
 
     def set_text_colour(self, colour: list):
