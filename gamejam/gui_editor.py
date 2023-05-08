@@ -214,6 +214,8 @@ class GuiEditor():
     def toggle_edit_mode(**kwargs):
         editor = kwargs["editor"]
         mode = kwargs["mode"]
+        edit_kwargs = kwargs.copy()
+        edit_kwargs["widget"] = editor.widget_to_edit
         if editor.mode is not GuiEditMode.NONE:
             if editor.mode is GuiEditMode.INSPECT:
                 editor.mode = mode
@@ -224,22 +226,15 @@ class GuiEditor():
                         buffer=editor.widget_to_edit.name,
                         pos=editor.widget_to_edit._draw_pos,
                         on_commit_func=GuiEditor.on_commit_widget_text,
-                        on_commit_kwargs={
-                            "editor": editor,
-                            "widget": editor.widget_to_edit,
-                            "mode": editor.mode,
-                        }
+                        on_commit_kwargs=edit_kwargs,
                     )
                 elif editor.mode == GuiEditMode.TEXT:
                     editor.gui.cursor.set_text_edit(
                         buffer=editor.widget_to_edit.text, 
                         pos=editor.widget_to_edit._draw_pos,
                         on_commit_func=GuiEditor.on_commit_widget_text,
-                        on_commit_kwargs={
-                            "editor": editor,
-                            "widget": editor.widget_to_edit,
-                            "mode": editor.mode,
-                        })
+                        on_commit_kwargs=edit_kwargs
+                    )
             else:
                 editor.mode = GuiEditMode.INSPECT
                 editor.edit_start_pos = None

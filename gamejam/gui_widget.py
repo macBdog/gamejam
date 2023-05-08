@@ -1,5 +1,4 @@
 import enum
-import yaml
 import logging
 from gamejam.animation import AnimType, Animation
 from gamejam.graphics import Shader
@@ -66,9 +65,13 @@ class GuiWidget(Widget):
             "align_to": f"{widget._align_to.x}, {widget._align_to.y}",
             "children": [],
         }
+        if type(widget) is GuiWidget:
+            output["text"] = f"{widget.text}"
+            output["text_size"] = f"{widget.text_size}"
+
         for child_widget in widget._children:
             child_object = {}
-            Widget.serialize(child_widget, child_object)
+            GuiWidget.serialize(child_widget, child_object)
             output[widget.name]["children"].append(child_object)
 
 
@@ -243,27 +246,3 @@ class GuiWidget(Widget):
                 if self._size_to_text:
                     self._text_dimensions = text_dim
                     self.set_size(self._text_dimensions)
-
-
-    def dump(self, stream):
-        """Write hierachy to a yaml file, called by Gui editor"""
-        output = {}
-        GuiWidget.serialize(self, output)
-        yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
-
-
-    def restore(self, stream):
-        """Load config from a file and set internal state"""
-        obj = yaml.load(stream, Loader=yaml.Loader)
-        if self.name in obj:
-            widget_input = obj[self.name]
-            GuiWidget.deserialize(self, widget_input)
-            if "children" in widget_input and type(widget_input["children"]) is list:
-                for child in widget_input["children"]:
-                    child_name = next(iter(child))
-                    child_widget = GuiWidget(child_name)
-                    GuiWidget.deserialize(child_widget, child[child_name])
-                    self.add_child(child_widget)
-
-        else:
-            logging.error(f"Widget load error! Trying to restore a widget named {self.name} from a stream called {stream.name}")

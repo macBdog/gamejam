@@ -1,6 +1,7 @@
+import logging
 import os
+import yaml
 from pathlib import Path
-
 from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
 from gamejam.cursor import Cursor
@@ -31,8 +32,8 @@ class Gui(Widget):
             gui_path = Path(os.getcwd()) / "gui" / f"{name}.yml"
             if gui_path.exists():
                 with open(gui_path, 'r') as stream:
-                    GuiWidget.restore(self, stream)
-      
+                    self.restore(stream)
+
         self.set_size(Coord2d(2.0, 2.0))
 
 
@@ -70,6 +71,29 @@ class Gui(Widget):
     def delete_widget(self, widget: Widget):
         if widget in self._children:
             self._children.remove(widget)
+
+
+    def dump(self, stream):
+        """Write hierachy to a yaml file, called by Gui editor"""
+        output = {}
+        GuiWidget.serialize(self, output)
+        yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
+
+
+    def restore(self, stream):
+        """Load config from a file and set internal state"""
+        obj = yaml.load(stream, Loader=yaml.Loader)
+        if obj is not None and self.name in obj:
+            widget_input = obj[self.name]
+            GuiWidget.deserialize(self, widget_input)
+            if "children" in widget_input and type(widget_input["children"]) is list:
+                for child in widget_input["children"]:
+                    child_name = next(iter(child))
+                    child_widget = GuiWidget(child_name)
+                    GuiWidget.deserialize(child_widget, child[child_name])
+                    self.add_child(child_widget)
+        else:
+            logging.error(f"Widget load error! Trying to restore a widget named {self.name} from a stream called {stream.name}")
 
 
     def touch(self, mouse: Cursor) -> TouchState:
