@@ -57,17 +57,30 @@ class GuiWidget(Widget):
 
 
     @staticmethod
-    def serialize(widget, output):
+    def serialize(widget: Widget, output):
+
         output[widget.name] = {
-            "offset": f"{widget._offset.x:.2f}, {widget._offset.y:.2f}",
-            "size": f"{widget._size.x:.2f}, {widget._size.y:.2f}",
-            "align": f"{widget._align.x}, {widget._align.y}",
-            "align_to": f"{widget._align_to.x}, {widget._align_to.y}",
+            "offset": str(widget._offset),
+            "size": str(widget._size),
+            "align": str(widget._align),
+            "align_to": str(widget._align_to),
             "children": [],
         }
+
         if type(widget) is GuiWidget:
-            output["text"] = f"{widget.text}"
-            output["text_size"] = f"{widget.text_size}"
+            if widget.has_sprite():
+                if type(widget.sprite) is SpriteTexture:
+                    output["sprite_name"] = widget.sprite.name()
+
+                output["sprite_col"] = widget.sprite.colour
+                output["sprite_stretch"] = widget.sprite_stretch
+
+            if widget.has_text():
+                output["text"] = widget.text
+                output["text_col"] = str(widget.text_col)
+                output["text_offset"] = str(widget.text_offset)
+                output["text_size"] = str(widget.text_size)
+                output["font"] = widget.font.filename
 
         for child_widget in widget._children:
             child_object = {}
@@ -76,15 +89,25 @@ class GuiWidget(Widget):
 
 
     @staticmethod
-    def deserialize(widget, input):
+    def deserialize(widget: Widget, input):
         if "offset" in input:
             widget._offset.from_string(input["offset"])
         if "size" in input:
             widget._size.from_string(input["size"])
         if "align" in input:
-            pass
+            widget._align = Alignment.from_string(input)
         if "align_to" in input:
-            pass
+            widget._align_to = Alignment.from_string(input)
+        if type(widget) is GuiWidget:
+            gw = widget
+            if "text" in input:
+                GuiWidget.text = input["text"]
+            if "font" in input:
+                gw.font
+
+
+    def has_sprite(self) -> bool:
+        return self.sprite is not None
 
 
     def set_sprite(self, sprite: SpriteTexture, stretch:bool=False):
@@ -113,6 +136,10 @@ class GuiWidget(Widget):
         self._text_draw_pos -= Coord2d(0.01, -0.01)
 
 
+    def has_text(self) -> bool:
+        return len(self.text > 0) and self.font is not None
+
+
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):
         self._text_dirty = text != self.text or self.text_size != text_size
         self.text = text
@@ -128,8 +155,8 @@ class GuiWidget(Widget):
                 self.font = font
 
 
-    def set_text_colour(self, colour: list):
-        self.text_col = colour
+    def set_text_colour(self, col: list):
+        self.text_col = col
 
 
     def set_colour_func(self, colour_func, colour_kwargs=None):

@@ -1,5 +1,7 @@
+from copy import copy
 from OpenGL.GL import *
 import os.path
+from pathlib import Path
 from PIL import Image
 import numpy
 
@@ -12,16 +14,19 @@ class Texture:
     """Encapsulates the resources required to render a sprite with
     an image mapped onto it. Keeps hold of the image data and the
     ID represetnation in OpenGL."""
+    FILE_EXTENSIONS = [ ".png", ".jpg", ".tga" ]
 
     @staticmethod
     def get_random_pixel():
         return [numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255)]
+
 
     def get_random_texture(width:int, height:int) -> list:
         tex = []
         for _ in range(width * height):
             tex += Texture.get_random_pixel()
         return tex
+
 
     def __init__(self, texture_path: str, default_width:int=32, default_height:int=32, wrap:bool=True):
         if os.path.exists(texture_path):
@@ -170,45 +175,17 @@ class SpriteTexture(Sprite):
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
 
-class TextureManager:
-    """The textures class handles loading and management of all image resources for the game.
-    The idea is that textures are loaded on demand and stay loaded until explicitly unloaded
-    or the game is shutdown."""
-
-    def __init__(self, base, graphics):
-        self.base_path = base
-        self.graphics = graphics
-        self.textures = {}
-
-    def get(self, texture_name: str, wrap:bool=True) -> SpriteTexture:
-        if texture_name in self.textures:
-            return self.textures[texture_name]
-        else:
-            texture_path = os.path.join(self.base_path, texture_name)
-            new_texture = Texture(texture_path, wrap=wrap)
-            self.textures[texture_name] = new_texture
-            return new_texture
-
-    def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteShape(self.graphics, colour, pos, size, shader)
-
-    def create_sprite_texture(self, texture_name: str, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], pos, size, shader)
-
-    def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get(texture_name, wrap=wrap), colour, pos, size, shader)
-
-
 class TextureAtlas:
-    """A texture atlas is a composite of multiple textures into one larger The orignal 
-    textures can be access by name """
+    """A texture atlas is a composite of multiple textures into one larger. The orignal 
+    textures can be accessed by name """
 
     def __init__(self, default_width:int=2048, default_height:int=2048):
         self.img_data = numpy.array([0] * 4) * default_width * default_height
-        self.width = default_width
-        self.height = default_height
+        self.size = Coord2d(default_width, default_height)
         self.texture_id = glGenTextures(1)
         self.textures = {}
+
+        self._sentinel = Coord2d()
 
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
@@ -218,15 +195,60 @@ class TextureAtlas:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
 
 
-    def add_texture(self, texture_path: str) -> bool:
+    def add(self, texture_path: Path, name: str=None) -> str:
         """Composite a texture into the atlas an add it to the dictionary of textures."""
-        if os.path.exists(texture_path):
+        if texture_path.exists():
             image = Image.open(texture_path)
-            width = self.image.width
-            height = self.image.height
-            size = Coord2d(width, height)
-            pos = Coord2d(0.0, 0.0)
+            size = Coord2d(self.image.width, self.image.height)
 
-            if width < self.width and height < self.height:
-                img_data = numpy.array(list(image.getdata()), numpy.uint8)
-                self.textures["texture_path"] =  [pos, size]
+            if name is not None and name not in self.textures:
+                self.name = name
+            else:
+                name = texture_path.stem
+
+            avail = self.size - self._sentinel - size
+            if avail.x >= size.x:
+                if avail.y < size.y:
+                    self._sentinel += Coord2d(0.0, size.y - avail.y)
+
+                if avail.y >= size.y:
+                    img_data = numpy.array(list(image.getdata()), numpy.uint8)
+                    pos = copy(self._sentinel)
+                    self._sentinel += size
+                    self.textures[name] =  [pos, size]
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+
+class TextureManager:
+    """The textures class handles loading and management of all image resources for the game.
+    The idea is that textures are loaded on demand and stay loaded until explicitly unloaded
+    or the game is shutdown."""
+
+    def __init__(self, base: Path, graphics):
+        self.base_path = base
+        self.graphics = graphics
+        self.raw_textures = {}
+        self.atlas = TextureAtlas()
+
+        textures = [f for f in base.iterdir() if str(f)[str(f).rfind('.'):].lower() in Texture.FILE_EXTENSIONS]
+        for tex in textures:
+            self.atlas.add(tex)
+
+
+    def get_raw(self, texture_name: str, wrap:bool=True) -> SpriteTexture:
+        if texture_name in self.raw_textures:
+            return self.raw_textures[texture_name]
+        else:
+            texture_path = os.path.join(self.base_path, texture_name)
+            new_texture = Texture(texture_path, wrap=wrap)
+            self.raw_textures[texture_name] = new_texture
+            return new_texture
+
+    def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteShape(self.graphics, colour, pos, size, shader)
+
+    def create_sprite_texture(self, texture_name: str, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], pos, size, shader)
+
+    def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), colour, pos, size, shader)

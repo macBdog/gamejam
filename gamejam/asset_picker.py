@@ -33,7 +33,7 @@ class AssetPicker():
     ASSET_SPACING = Coord2d(0.05, 0.05)
     IGNORED_DIR_PREFIX = [".", "_"]
     FILE_EXTENSIONS = {
-        AssetType.TEXTURE: [ ".png", ".jpg", ".tga" ],
+        AssetType.TEXTURE: Texture.FILE_EXTENSIONS,
         AssetType.SOUND: [ ".wav" ],
     }
 

@@ -23,6 +23,16 @@ class Alignment:
     y: AlignY
 
 
+    def __str__(self) -> str:
+        return f"{self.x}, {self.y}"
+
+
+    @staticmethod
+    def from_string(input: str):
+        aterms = input["align"].replace(" ", "").split(",")
+        return Alignment(AlignX[aterms[0]], AlignY[aterms[1]])
+
+
 def widget_dirty(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

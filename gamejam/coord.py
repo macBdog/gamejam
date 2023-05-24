@@ -75,6 +75,10 @@ class Coord2d(Coord):
         return f"{self.x}, {self.y}"
 
 
+    def __str__(self) -> str:
+        return f"{self.x:.3f}, {self.y:.3f}"
+
+
     def __add__(self, other):
         return Coord2d(self.x + other.x, self.y + other.y)
 
@@ -127,6 +131,10 @@ class Coord3d(Coord):
 
     def __repr__(self) -> str:
         return f"{self.x}, {self.y}, {self.z}"
+
+
+    def __str__(self) -> str:
+        return f"{self.x:.3f}, {self.y:.3f}, {self.z:.3f}"
 
 
     def __add__(self, other):

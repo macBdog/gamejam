@@ -33,43 +33,10 @@ from gamejam.coord import Coord2d
 from gamejam.quickmaff import MATRIX_IDENTITY
 
 class Font():
-    def blit(self, dest, src, loc):
-        pos = [i if i >= 0 else None for i in loc]
-        neg = [-i if i < 0 else None for i in loc]
-        target = dest[tuple([slice(i,None) for i in pos])]
-
-        src = src[tuple([slice(i, j) for i,j in zip(neg, target.shape)])]
-        target[tuple([slice(None, i) for i in src.shape])] = src
-        return dest
-
-    def blit_char(self, dest, glyph, loc, char_index: int):
-        bitmap = glyph.bitmap
-        width  = bitmap.rows
-        height = bitmap.width
-
-        if width <= 0 or height <= 0:
-            return loc
-
-        if height > self.largest_glyph_height:
-            self.largest_glyph_height = height
-
-        if loc[0] + width >= self.tex_width:
-            loc = (0, loc[1] + self.largest_glyph_height)
-
-        if loc[0] > self.tex_width or loc[1] > self.tex_width:
-            print(f"Font atlas not large enough for all characters!")
-            return loc
-            
-        src = np.reshape(bitmap.buffer, (width, height))
-        self.blit(dest, src, loc)
-
-        self.sizes[char_index] = (height / self.tex_width, width / self.tex_height)
-        self.positions[char_index] = (loc[1] / self.tex_height, loc[0] / self.tex_width)
-        return (loc[0] + width, loc[1])
-
     def __init__(self, filename: str, graphics: Graphics, window):
         self.graphics = graphics
-        self.face = Face(filename)
+        self.filename = filename
+        self.face = Face(self.filename)
         self.face.set_char_size(9000)
         self.sizes = {}
         self.positions = {}
@@ -170,6 +137,42 @@ class Font():
         self.object_mat_id = glGetUniformLocation(shader_font, "ObjectMatrix")
         self.view_mat_id = glGetUniformLocation(shader_font, "ViewMatrix")
         self.projection_mat = glGetUniformLocation(shader_font, "ProjectionMatrix")
+
+
+    def blit(self, dest, src, loc):
+        pos = [i if i >= 0 else None for i in loc]
+        neg = [-i if i < 0 else None for i in loc]
+        target = dest[tuple([slice(i,None) for i in pos])]
+
+        src = src[tuple([slice(i, j) for i,j in zip(neg, target.shape)])]
+        target[tuple([slice(None, i) for i in src.shape])] = src
+        return dest
+
+
+    def blit_char(self, dest, glyph, loc, char_index: int):
+        bitmap = glyph.bitmap
+        width  = bitmap.rows
+        height = bitmap.width
+
+        if width <= 0 or height <= 0:
+            return loc
+
+        if height > self.largest_glyph_height:
+            self.largest_glyph_height = height
+
+        if loc[0] + width >= self.tex_width:
+            loc = (0, loc[1] + self.largest_glyph_height)
+
+        if loc[0] > self.tex_width or loc[1] > self.tex_width:
+            print(f"Font atlas not large enough for all characters!")
+            return loc
+            
+        src = np.reshape(bitmap.buffer, (width, height))
+        self.blit(dest, src, loc)
+
+        self.sizes[char_index] = (height / self.tex_width, width / self.tex_height)
+        self.positions[char_index] = (loc[1] / self.tex_height, loc[0] / self.tex_width)
+        return (loc[0] + width, loc[1])
 
 
     def get_line_display_height(self, font_size: int):
