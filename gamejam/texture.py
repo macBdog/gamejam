@@ -1,9 +1,10 @@
 from copy import copy
+from dataclasses import dataclass
 from OpenGL.GL import *
 import os.path
 from pathlib import Path
 from PIL import Image
-import numpy
+import numpy as np
 
 from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics, Shader
@@ -11,21 +12,22 @@ from gamejam.quickmaff import MATRIX_IDENTITY
 
 
 class Texture:
-    """Encapsulates the resources required to render a sprite with
-    an image mapped onto it. Keeps hold of the image data and the
+    """Encapsulates the resources required to render a image data with it's own
+    image resources mapped onto it. Keeps hold of the image data and the
     ID represetnation in OpenGL."""
     FILE_EXTENSIONS = [ ".png", ".jpg", ".tga" ]
 
     @staticmethod
     def get_random_pixel():
-        return [numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255), numpy.random.randint(0, 255)]
+        return [np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)]
 
 
-    def get_random_texture(width:int, height:int) -> list:
+    @staticmethod
+    def get_random_texture(width:int, height:int) -> np.array:
         tex = []
         for _ in range(width * height):
             tex += Texture.get_random_pixel()
-        return tex
+        return np.array(tex)
 
 
     def __init__(self, texture_path: str, default_width:int=32, default_height:int=32, wrap:bool=True):
@@ -33,7 +35,7 @@ class Texture:
             self.image = Image.open(texture_path)
             self.width = self.image.width
             self.height = self.image.height
-            self.img_data = numpy.array(list(self.image.getdata()), numpy.uint8)
+            self.img_data = np.array(list(self.image.getdata()), np.uint8)
         else:
             self.img_data = Texture.get_random_texture(default_width, default_height)
             self.width = default_width
@@ -77,7 +79,7 @@ class SpriteShape(Sprite):
 
         # Create Buffer object in gpu
         self.VBO = glGenBuffers(1)
-        self.rectangle = numpy.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5], dtype=numpy.float32)
+        self.rectangle = np.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5], dtype=np.float32)
 
         # Bind the buffer
         glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
@@ -175,15 +177,22 @@ class SpriteTexture(Sprite):
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
 
+@dataclass(init=True)
+class TextureAtlasItem:
+    name: str
+    size: Coord2d()
+    pos: Coord2d()
+
+
 class TextureAtlas:
     """A texture atlas is a composite of multiple textures into one larger. The orignal 
     textures can be accessed by name """
 
-    def __init__(self, default_width:int=2048, default_height:int=2048):
-        self.img_data = numpy.array([0] * 4) * default_width * default_height
+    def __init__(self, default_width:int=4096, default_height:int=4096):
+        self.img_data = np.array([0] * 4) * default_width * default_height
         self.size = Coord2d(default_width, default_height)
         self.texture_id = glGenTextures(1)
-        self.textures = {}
+        self.texture_items = {}
 
         self._sentinel = Coord2d()
 
@@ -192,16 +201,16 @@ class TextureAtlas:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.size.x, self.size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
 
 
     def add(self, texture_path: Path, name: str=None) -> str:
         """Composite a texture into the atlas an add it to the dictionary of textures."""
         if texture_path.exists():
             image = Image.open(texture_path)
-            size = Coord2d(self.image.width, self.image.height)
+            size = Coord2d(image.width, image.height)
 
-            if name is not None and name not in self.textures:
+            if name is not None and name not in self.texture_items:
                 self.name = name
             else:
                 name = texture_path.stem
@@ -212,10 +221,10 @@ class TextureAtlas:
                     self._sentinel += Coord2d(0.0, size.y - avail.y)
 
                 if avail.y >= size.y:
-                    img_data = numpy.array(list(image.getdata()), numpy.uint8)
+                    img_data = np.array(list(image.getdata()), np.uint8)
                     pos = copy(self._sentinel)
                     self._sentinel += size
-                    self.textures[name] =  [pos, size]
+                    self.texture_items[name] = TextureAtlasItem(name, size, pos)
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
 
 
@@ -244,11 +253,14 @@ class TextureManager:
             self.raw_textures[texture_name] = new_texture
             return new_texture
 
+
     def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
         return SpriteShape(self.graphics, colour, pos, size, shader)
 
+
     def create_sprite_texture(self, texture_name: str, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
         return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], pos, size, shader)
+
 
     def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
         return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), colour, pos, size, shader)

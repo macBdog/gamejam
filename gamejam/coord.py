@@ -2,6 +2,42 @@ import math
 from abc import ABC, abstractmethod
 
 class Coord(ABC):
+    """TODO: Change this to a numpy array with property accessors and compare speed:
+    @property
+    def x(self):
+        return self[0]
+
+
+    @property
+    def y(self):
+        return self[1]
+
+
+    def __eq__(self, other):
+        return np.array_equal(self, other)
+
+
+    def __ne__(self, other):
+        return not np.array_equal(self, other)
+
+
+    def __iter__(self):
+        for x in np.nditer(self):
+            yield x.item()
+
+
+    def __abs__(self):
+        return np.linalg.norm(self)
+
+
+    def dist(self,other):
+        return np.linalg.norm(self-other)
+
+
+    def dot(self, other):
+        return np.dot(self, other)
+
+    """
     @abstractmethod
     def __repr__(self):
         pass
