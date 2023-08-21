@@ -1,6 +1,6 @@
 from enum import Enum, auto
 import os
-import numpy
+import numpy as np
 from pathlib import Path
 from OpenGL.GL import (
     glCreateProgram, glCreateShader,
@@ -22,6 +22,7 @@ from gamejam.quickmaff import MATRIX_ORTHO, MATRIX_PERSPECTIVE
 
 class Shader(Enum):
     TEXTURE = 0
+    TEXTURE_ATLAS = auto()
     COLOUR = auto()
     FONT = auto()
     PARTICLES = auto()
@@ -34,14 +35,13 @@ class ShaderType(Enum):
 
 class Graphics:
     SHADER_PATH = "shaders"
-    DEFAULT_RECTANGLE = numpy.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], dtype=numpy.float32)
-
+    DEFAULT_RECTANGLE = np.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
     def __init__(self, display_width_over_height: float):
         self.display_ratio = 1.0 / display_width_over_height
         self._programs = {}
         self._shaders = {}
-        self.default_indices = numpy.array([0, 1, 2, 2, 3, 0], dtype=numpy.uint32)
+        self.default_indices = np.array([0, 1, 2, 2, 3, 0], dtype=np.uint32)
         self.projection_mat = MATRIX_ORTHO
         self.camera = Camera()
 
