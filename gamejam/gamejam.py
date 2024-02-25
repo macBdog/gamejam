@@ -60,8 +60,7 @@ class GameJam:
 
         # Now we have an OpenGL context we can compile GPU programs
         self.graphics = Graphics(self.window_width / self.window_height)
-        font_path = Path(__file__).parent / "res" / "consola.ttf"
-        self.font = Font(str(font_path), self.graphics, self.window)
+        self.font = Font(self.graphics, self.window)
         self.textures = TextureManager(texture_path, self.graphics)
         self.input = Input(self.window, InputMethod.KEYBOARD, self.font)
         self.particles = Particles(self.graphics)

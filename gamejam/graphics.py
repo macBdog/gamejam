@@ -79,6 +79,10 @@ class Graphics:
         return self._programs[shader]
 
 
+    def set_program(self, shader: Shader, prog):
+        self._programs[shader] = prog
+
+
     def builtin_shader(self, shader: Shader, type: ShaderType) -> str:
         name = Graphics.get_shader_name(shader, type)
         if name not in self._shaders:

@@ -1,6 +1,8 @@
 from copy import copy
 import glfw
 import numpy as np
+import importlib.resources
+from pathlib import Path
 from freetype import Face, ctypes
 from OpenGL.GL import (
     glGenBuffers, glBindBuffer, glBufferData,
@@ -33,10 +35,14 @@ from gamejam.coord import Coord2d
 from gamejam.quickmaff import MATRIX_IDENTITY
 
 class Font():
-    def __init__(self, filename: str, graphics: Graphics, window):
+    def __init__(self, graphics: Graphics, window, filename: str=None):
         self.graphics = graphics
-        self.filename = filename
-        self.face = Face(self.filename)
+        if filename is None:
+            #self.filename = importlib.resources.read_binary("gamejam/res", "consola.ttf")
+            self.filename = Path(__file__).parent / "res" / "consola.ttf"
+        else:
+            self.filename = filename
+        self.face = Face(str(self.filename))
         self.face.set_char_size(9000)
         self.sizes = {}
         self.positions = {}

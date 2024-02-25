@@ -30,7 +30,7 @@ class Alignment:
     @staticmethod
     def from_string(input: str):
         aterms = input["align"].replace(" ", "").split(",")
-        return Alignment(AlignX[aterms[0]], AlignY[aterms[1]])
+        return Alignment(AlignX[aterms[0].split(".")[1]], AlignY[aterms[1].split(".")[1]])
 
 
 def widget_dirty(func):

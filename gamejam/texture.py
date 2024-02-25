@@ -5,6 +5,7 @@ import os.path
 from pathlib import Path
 from PIL import Image
 import numpy as np
+from typing import Dict, List
 
 from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics, Shader, ShaderType
@@ -186,16 +187,16 @@ class SpriteTexture(Sprite):
 @dataclass(init=True)
 class TextureAtlasItem:
     name: str
-    size: Coord2d()
-    pos: Coord2d()
+    size: Coord2d
+    pos: Coord2d
 
 
 @dataclass(init=True)
 class TextureAtlasDraw:
     item: TextureAtlasItem
-    size: Coord2d()
-    pos: Coord2d()
-    col: list()
+    size: Coord2d
+    pos: Coord2d
+    col: list
 
 
 class TextureAtlas:
@@ -208,8 +209,8 @@ class TextureAtlas:
         self.img_data = np.zeros(4 * default_width * default_height, dtype=np.uint8)
         self.size = Coord2d(default_width, default_height)
         self.texture_id = glGenTextures(1)
-        self.texture_items: list[TextureAtlasItem]
-        self.texture_draws: list[TextureAtlasDraw]
+        self.texture_items: Dict[TextureAtlasItem] = {}
+        self.texture_draws: List[TextureAtlasDraw] = []
 
         self._sentinel = Coord2d()
 
@@ -229,8 +230,7 @@ class TextureAtlas:
 
         atlas_shader = Graphics.process_shader_source(graphics.builtin_shader(Shader.TEXTURE_ATLAS, ShaderType.PIXEL), shader_substitutes)
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE_ATLAS, ShaderType.VERTEX), atlas_shader)
-
-        self.shader = self.graphics.get_program(Shader.TEXTURE_ATLAS)
+        self.graphics.set_program(Shader.TEXTURE_ATLAS, self.shader)
 
         # Setup buffers with indices for drawing MaxDraws number of rectangles every call
         vao = glGenVertexArrays(1)
@@ -308,18 +308,28 @@ class TextureAtlas:
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
 
+class SpriteAtlasTexture(Sprite):
+    def __init__(self, graphics: Graphics, atlas: TextureAtlas, name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None):
+        Sprite.__init__(self, graphics, colour, pos, size)
+        self.atlas = atlas
+        self.name = name
+
+    def draw(self):
+        self.atlas.draw(self.name, self.pos, self.size, self.colour)
+
+
 class TextureManager:
     """The textures class handles loading and management of all image resources for the game.
     The idea is that textures are loaded on demand and stay loaded until explicitly unloaded
     or the game is shutdown."""
 
     def __init__(self, base: Path, graphics):
-        self.base_path = base
+        self.base_path = Path(base)
         self.graphics = graphics
         self.raw_textures = {}
         self.atlas = TextureAtlas(graphics)
 
-        textures = [f for f in base.iterdir() if str(f)[str(f).rfind('.'):].lower() in Texture.FILE_EXTENSIONS]
+        textures = [f for f in self.base_path.iterdir() if str(f)[str(f).rfind('.'):].lower() in Texture.FILE_EXTENSIONS]
         for tex in textures:
             self.atlas.add(tex)
 
@@ -334,13 +344,17 @@ class TextureManager:
             return new_texture
 
 
-    def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+    def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None):
         return SpriteShape(self.graphics, colour, pos, size, shader)
 
 
     def create_sprite_texture(self, texture_name: str, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), [1.0, 1.0, 1.0, 1.0], pos, size, shader)
+        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), [1.0] * 4, pos, size, shader)
 
 
-    def create_sprite_texture_tinted(self, texture_name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), colour, pos, size, shader)
+    def create_sprite_texture_tinted(self, name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
+        return SpriteTexture(self.graphics, self.get_raw(texture_name, wrap=wrap), name, colour, pos, size)
+
+
+    def create_sprite_atlas_texture(self, name: str, pos: Coord2d, size: Coord2d):
+        return SpriteAtlasTexture(self.graphics, self.atlas, name, [1.0] * 4, pos, size)
