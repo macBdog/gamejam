@@ -1,10 +1,8 @@
 from pathlib import Path
 import time
 
-from gamejam.font import Font
 from gamejam.gui import Gui
 from gamejam.gamejam import GameJam
-from gamejam.texture import SpriteTexture
 from gamejam.coord import Coord2d
 
 class GameWithTextureAtlas(GameJam):
@@ -19,7 +17,7 @@ class GameWithTextureAtlas(GameJam):
 
         test_gui = Gui("test_gui", self.graphics, self.font)
         test_gui.set_active(True, True)
-        
+
         test_atlas_image = self.textures.create_sprite_atlas_texture("btnback", Coord2d(0.0, 0.0), Coord2d(0.5, 0.5))
         test_gui.add_create_widget(test_atlas_image)
 
@@ -30,7 +28,7 @@ class GameWithTextureAtlas(GameJam):
         game_draw, _ = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
-
+            self.textures.debug_draw_atlas()
             self.profile.end()
 
     def end(self):
@@ -53,6 +51,6 @@ def test_texture_atlas():
         return True
     return False
 
-
 if __name__ == "__main__":
     test_texture_atlas()
+

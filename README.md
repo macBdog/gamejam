@@ -1,6 +1,12 @@
 # gamejam
 A Python and OpenGL game jamming framework. See tests.py for a minimal example.
 
+## Installation
+From outsite the repository root:
+```
+python -m pip install -e gamejam
+```
+
 ## Hotkeys:
 * `PrtSc` - Dump profiling information to the command line
 * `Ctrl+D` - Toggle dev mode (default off)

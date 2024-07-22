@@ -1,7 +1,6 @@
 from copy import copy
 import glfw
 import numpy as np
-import importlib.resources
 from pathlib import Path
 from freetype import Face, ctypes
 from OpenGL.GL import (
@@ -38,7 +37,6 @@ class Font():
     def __init__(self, graphics: Graphics, window, filename: str=None):
         self.graphics = graphics
         if filename is None:
-            #self.filename = importlib.resources.read_binary("gamejam/res", "consola.ttf")
             self.filename = Path(__file__).parent / "res" / "consola.ttf"
         else:
             self.filename = filename
@@ -64,7 +62,7 @@ class Font():
         self.object_mat = MATRIX_IDENTITY
 
         if GameSettings.DEV_MODE:
-            print(f"Building font atlas for {filename}: ", end='')
+            print(f"Building font atlas for {self.filename}: ", end='')
 
         # Blit font chars into the texture noting the individual char size and tex coords
         atlas_pos = (0, 0)        
@@ -94,7 +92,7 @@ class Font():
                 print(chr(c), end='')
 
         if GameSettings.DEV_MODE:
-            print('')
+            print(' OK!')
 
         # Generate texture data
         self.image_data_texture = self.image_data.flatten()
