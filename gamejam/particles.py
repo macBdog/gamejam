@@ -76,14 +76,14 @@ class Particles:
         """Upload the emitters state to the shader every frame."""
 
         self.emitters = [x - (dt * self.emitter_speeds[i]) for i, x in enumerate(self.emitters)]
-        
+
         def particle_uniforms():
             glUniform1f(self.display_ratio_id, self.display_ratio)
             glUniform1fv(self.emitters_id, Particles.NumEmitters, self.emitters)
             glUniform2fv(self.emitter_positions_id, Particles.NumEmitters, self.emitter_positions)
             glUniform3fv(self.emitter_colours_id, Particles.NumEmitters, self.emitter_colours)
             glUniform2fv(self.emitter_attractors_id, Particles.NumEmitters, self.emitter_attractors)
-        
+
         self.sprite.draw(particle_uniforms)
 
     def end(self):

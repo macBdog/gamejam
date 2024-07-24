@@ -6,10 +6,10 @@ out vec4 outColour;
 uniform sampler2D SamplerTex;
 uniform vec4 Colour;
 
+uniform int DrawIndices[MAX_ATLAS_DRAWS];
 uniform vec2 DrawPositions[MAX_ATLAS_DRAWS];
 uniform vec2 DrawSizes[MAX_ATLAS_DRAWS];
 uniform vec4 DrawColours[MAX_ATLAS_DRAWS];
-uniform int DrawIndices[MAX_ATLAS_DRAWS];
 uniform vec2 ItemPositions[MAX_ATLAS_ITEMS];
 uniform vec2 ItemSizes[MAX_ATLAS_ITEMS];
 
@@ -23,7 +23,6 @@ float drawRect(in vec2 uv, in vec2 center, in vec2 wh)
 void main()
 {
     outColour = texture(SamplerTex, OutTexCoord) * Colour;
-    /*
     vec2 uv = vec2(0.0);
 
     for (int i = 0; i < MAX_ATLAS_DRAWS; ++i)
@@ -33,12 +32,14 @@ void main()
             continue;
         }
 
+        // First, lookup the item declaration
+        vec2 item_size = ItemSizes[DrawIndices[i]];
+        vec2 item_pos = ItemPositions[DrawIndices[i]];
+
         vec2 draw_pos = (DrawPositions[i] + 1.0) * 0.5;
         vec2 draw_size = DrawSizes[i];
         vec4 draw_col = DrawColours[i];
-        vec2 item_size = ItemSizes[i];
-        vec2 item_pos = ItemPositions[i];
-        
+
         // First get the uv's to be item relative
         vec2 item_uv = uv - (DrawPositions[i] * 0.5);
         
@@ -48,5 +49,5 @@ void main()
         item_uv *= (1.0 / draw_size);
 
         outColour += drawRect(uv, draw_pos, draw_size) * texture(SamplerTex, item_uv);
-    }*/
+    }
 }
