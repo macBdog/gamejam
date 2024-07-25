@@ -272,12 +272,12 @@ class TextureAtlas:
 
         # Also bind a debug shader for drawing the complete atlas
         self.debug_shader = self.graphics.get_program(Shader.TEXTURE)
-        self.debug_colour_id = glGetUniformLocation(self.shader, "Colour")
-        self.debug_pos_id = glGetUniformLocation(self.shader, "Position")
-        self.debug_size_id = glGetUniformLocation(self.shader, "Size")
-        self.debug_object_mat_id = glGetUniformLocation(self.shader, "ObjectMatrix")
-        self.debug_view_mat_id = glGetUniformLocation(self.shader, "ViewMatrix")
-        self.debug_projection_mat = glGetUniformLocation(self.shader, "ProjectionMatrix")
+        self.debug_colour_id = glGetUniformLocation(self.debug_shader, "Colour")
+        self.debug_pos_id = glGetUniformLocation(self.debug_shader, "Position")
+        self.debug_size_id = glGetUniformLocation(self.debug_shader, "Size")
+        self.debug_object_mat_id = glGetUniformLocation(self.debug_shader, "ObjectMatrix")
+        self.debug_view_mat_id = glGetUniformLocation(self.debug_shader, "ViewMatrix")
+        self.debug_projection_mat = glGetUniformLocation(self.debug_shader, "ProjectionMatrix")
 
     @staticmethod
     def blit(dst_image, dst_size: Coord2d, src_image, src_size: Coord2d, pos: Coord2d):
