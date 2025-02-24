@@ -18,10 +18,10 @@ class GameWithTextureAtlas(GameJam):
         test_gui = Gui("test_gui", self.graphics, self.font)
         test_gui.set_active(True, True)
 
-        test_atlas_image = self.textures.create_sprite_atlas_texture("btn_devices", Coord2d(0.0, 0.0), Coord2d(0.15, 0.15))
+        test_atlas_image = self.textures.create_sprite_atlas_texture("btn_devices.png", Coord2d(0.0, 0.0), Coord2d(0.15, 0.15))
         test_gui.add_create_widget(test_atlas_image)
 
-        test_atlas_image2 = self.textures.create_sprite_atlas_texture("btn_options", Coord2d(0.66, 0.66), Coord2d(0.15, 0.15))
+        test_atlas_image2 = self.textures.create_sprite_atlas_texture("btn_options.png", Coord2d(0.66, 0.66), Coord2d(0.15, 0.15))
         self.anim_widget = test_gui.add_create_widget(test_atlas_image2)
 
         self.gui.add_child(test_gui)

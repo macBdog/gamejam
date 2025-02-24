@@ -37,7 +37,7 @@ void main()
         vec2 draw_pos = DrawPositions[i];
         draw_pos.y = -draw_pos.y;
 
-        vec2 draw_size = DrawSizes[i];
+        vec2 draw_size = DrawSizes[i] * 0.5;
         vec4 draw_col = DrawColours[i];
 
         // First get the uv's to be item relative

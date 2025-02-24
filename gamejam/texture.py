@@ -409,7 +409,7 @@ class TextureManager:
         for tex in textures:
             if GameSettings.DEV_MODE:
                 print(f"▓", end='')
-            rel_name = str(tex.relative_to(self.base_path).as_posix())[:-4]
+            rel_name = str(tex.relative_to(self.base_path).as_posix())
             self.atlas.add(tex, name=rel_name)
 
         if GameSettings.DEV_MODE:
