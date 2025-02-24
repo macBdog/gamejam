@@ -199,8 +199,16 @@ class TextureAtlas:
     MaxDraws = 128
     def __init__(self, graphics: Graphics, default_width:int=4096, default_height:int=4096):
         self.graphics = graphics
-        self.img_data = np.zeros(4 * default_width * default_height, dtype=np.uint8)
         self.size = Coord2d(default_width, default_height)
+        self.img_data = np.zeros(4 * self.size.x * self.size.y, dtype=np.uint8)
+
+        self.debug_atlas = False
+        if self.debug_atlas:
+            fg_shape = Coord2d(int(self.size.x / 2), int(self.size.y))
+            fg_col = np.array([255, 0, 0, 255], dtype=np.uint8)
+            debug_img_data = np.full((fg_shape.x, fg_shape.y, 4), fg_col, dtype=np.uint8)
+            TextureAtlas.blit(self.img_data, self.size, debug_img_data, fg_shape, Coord2d(0.0, 0.0))
+
         self.texture_id = glGenTextures(1)
 
         self.texture_items: Dict[TextureAtlasItem] = {}
@@ -235,26 +243,21 @@ class TextureAtlas:
         self.shader = Graphics.create_program(graphics.builtin_shader(Shader.TEXTURE_ATLAS, ShaderType.VERTEX), atlas_shader)
         self.graphics.set_program(Shader.TEXTURE_ATLAS, self.shader)
 
-        # Setup buffers with indices for drawing MaxDraws number of rectangles every call
-        vao = glGenVertexArrays(1)
-        glBindVertexArray(vao)
-
-        vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        self.atlas_verts = np.zeros(16 * TextureAtlas.MaxDraws, dtype=np.float32)
-        glBufferData(GL_ARRAY_BUFFER, TextureAtlas.MaxDraws * 64, self.atlas_verts, GL_DYNAMIC_DRAW)
-
-        ebo = glGenBuffers(1)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        multi_rect_indices = np.array([0, 1, 2, 2, 3, 0] * TextureAtlas.MaxDraws, dtype=np.uint32)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24 * TextureAtlas.MaxDraws, multi_rect_indices, GL_STATIC_DRAW)
-
         self.VAO, self.VBO, self.EBO = Texture.create_buffers(self.graphics)
 
+        self.vertex_pos_id = glGetAttribLocation(self.shader, "VertexPosition")
+        glVertexAttribPointer(self.vertex_pos_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(0))
+        glEnableVertexAttribArray(self.vertex_pos_id)
+
+        self.tex_coord_id = glGetAttribLocation(self.shader, "TexCoord")
+        glVertexAttribPointer(self.tex_coord_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(32))
+        glEnableVertexAttribArray(self.tex_coord_id)
+
+        self.pos_id = glGetUniformLocation(self.shader, "Position")
+        self.size_id = glGetUniformLocation(self.shader, "Size")
         self.object_mat_id = glGetUniformLocation(self.shader, "ObjectMatrix")
         self.view_mat_id = glGetUniformLocation(self.shader, "ViewMatrix")
         self.projection_mat = glGetUniformLocation(self.shader, "ProjectionMatrix")
-        self.vertex_pos_id = glGetAttribLocation(self.shader, "VertexPosition")
 
         self.draw_index_id = glGetUniformLocation(self.shader, "DrawIndices")
         self.draw_pos_id = glGetUniformLocation(self.shader, "DrawPositions")
@@ -262,13 +265,6 @@ class TextureAtlas:
         self.draw_col_id = glGetUniformLocation(self.shader, "DrawColours")
         self.item_pos_id = glGetUniformLocation(self.shader, "ItemPositions")
         self.item_size_id = glGetUniformLocation(self.shader, "ItemSizes")
-
-        glVertexAttribPointer(self.vertex_pos_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(0))
-        glEnableVertexAttribArray(self.vertex_pos_id)
-
-        self.tex_coord_id = glGetAttribLocation(self.shader, "TexCoord")
-        glVertexAttribPointer(self.tex_coord_id, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(32))
-        glEnableVertexAttribArray(self.tex_coord_id)
 
         # Also bind a debug shader for drawing the complete atlas
         self.debug_shader = self.graphics.get_program(Shader.TEXTURE)
@@ -281,18 +277,20 @@ class TextureAtlas:
 
     @staticmethod
     def blit(dst_image, dst_size: Coord2d, src_image, src_size: Coord2d, pos: Coord2d):
-        dst = np.reshape(dst_image, (dst_size.x, dst_size.y, 4), order="C")
+        dst = np.reshape(dst_image, (dst_size.x, dst_size.y, 4), order="A")
         src = np.reshape(src_image, (src_size.x, src_size.y, 4), order="F")
+        src = np.flip(src, axis=0)
         dst[int(pos.x):int(pos.x + src_size.x), int(pos.y):int(pos.y + src_size.y)] = src
-        return dst.reshape((4 * dst_size.x * dst_size.y))
+        return dst.reshape((4 * dst_size.x * dst_size.y), order="A")
 
     def add(self, texture_path: Path, name: str=None) -> str:
         """Composite a texture into the atlas an add it to the dictionary of textures."""
+
         if texture_path.exists():
             tex = Image.open(texture_path)
             size = Coord2d(tex.width, tex.height)
 
-            if name is None or name not in self.texture_items:
+            if name is None:
                 name = texture_path.stem
 
             avail = self.size - self._next_pos - size
@@ -310,12 +308,14 @@ class TextureAtlas:
                 # Add a new item to the list of items, writing the a sequence of items for the shader to lookup
                 index = len(self.texture_items)
                 self.texture_items[name] = TextureAtlasItem(name, size, pos, index)
-                self.item_pos[index * 2] = pos.x
-                self.item_pos[(index * 2) + 1] = pos.y
-                self.item_size[index * 2] = size.x
-                self.item_size[(index * 2) + 1] = size.y
+                self.item_pos[index * 2] = pos.x / self.size.x
+                self.item_pos[(index * 2) + 1] = pos.y / self.size.y
+                self.item_size[index * 2] = size.x / self.size.x
+                self.item_size[(index * 2) + 1] = size.y / self.size.y
 
-                TextureAtlas.blit(self.img_data, self.size, tex_data, size, pos)
+                if not self.debug_atlas:
+                    TextureAtlas.blit(self.img_data, self.size, tex_data, size, pos)
+
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.size.x, self.size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.img_data)
                 self._next_pos.x += size.x
                 if size.y > self._next_largest:
@@ -336,14 +336,33 @@ class TextureAtlas:
         self.draw_col[(n * 4) + 3] = col[3]
         self.texture_draw_count += 1
 
+    def draw_debug_atlas_item(self, item_index: int, pos: Coord2d, size: Coord2d):
+        if item_index < 0:
+            self.draw_index[0] = 0
+            self.item_pos[0] = 0.0
+            self.item_pos[1] = 0.0
+            self.item_size[0] = 1.0
+            self.item_size[1] = 1.0
+        else:
+            self.draw_index[0] = item_index
+
+        self.draw_pos[0] = pos.x
+        self.draw_pos[1] = pos.y
+        self.draw_size[0] = size.x
+        self.draw_size[1] = size.y
+        self.draw_col[0] = 1.0
+        self.draw_col[1] = 1.0
+        self.draw_col[2] = 1.0
+        self.draw_col[3] = 1.0
+        self.texture_draw_count = 1
+
     def draw_final(self):
         glUseProgram(self.shader)
         glUniformMatrix4fv(self.object_mat_id, 1, GL_TRUE, MATRIX_IDENTITY[:])
         glUniformMatrix4fv(self.view_mat_id, 1, GL_TRUE, self.graphics.camera.mat)
         glUniformMatrix4fv(self.projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        glBindVertexArray(self.VAO)
+        glUniform2f(self.pos_id, 0.0, 0.0)
+        glUniform2f(self.size_id, 2.0, 2.0)
 
         glUniform2fv(self.item_pos_id, TextureAtlas.MaxItems, self.item_pos)
         glUniform2fv(self.item_size_id, TextureAtlas.MaxItems, self.item_size)
@@ -359,19 +378,6 @@ class TextureAtlas:
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
         self.texture_draw_count = 0
         self.draw_index.fill(-1)
-
-    def draw_debug(self):
-        glUseProgram(self.debug_shader)
-        glUniformMatrix4fv(self.debug_object_mat_id, 1, GL_TRUE, MATRIX_IDENTITY[:])
-        glUniformMatrix4fv(self.debug_view_mat_id, 1, GL_TRUE, self.graphics.camera.mat)
-        glUniformMatrix4fv(self.debug_projection_mat, 1, GL_TRUE, self.graphics.projection_mat)
-        glUniform4f(self.debug_colour_id, 1.0, 1.0, 1.0, 1.0)
-        glUniform2f(self.debug_pos_id, 0.0, 0.0)
-        glUniform2f(self.debug_size_id, 2.0 * self.graphics.display_ratio, 2.0)
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        glBindVertexArray(self.VAO)
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
 class SpriteAtlasTexture(Sprite):
     def __init__(self, graphics: Graphics, atlas: TextureAtlas, name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None):
@@ -393,14 +399,18 @@ class TextureManager:
         self.raw_textures = {}
         self.atlas = TextureAtlas(graphics)
 
-        textures = [f for f in self.base_path.iterdir() if str(f)[str(f).rfind('.'):].lower() in Texture.FILE_EXTENSIONS]
+        textures = list()
+        for e in Texture.FILE_EXTENSIONS:
+            textures.extend(self.base_path.rglob(f"*{e}"))
+
         if GameSettings.DEV_MODE:
             print(f"Building atlas for {len(textures)} textures: ", end='')
 
         for tex in textures:
             if GameSettings.DEV_MODE:
                 print(f"▓", end='')
-            self.atlas.add(tex)
+            rel_name = str(tex.relative_to(self.base_path).as_posix())[:-4]
+            self.atlas.add(tex, name=rel_name)
 
         if GameSettings.DEV_MODE:
             print(' OK!')
@@ -421,13 +431,16 @@ class TextureManager:
         return SpriteTexture(self.graphics, self.get_raw(name, wrap=wrap), [1.0] * 4, pos, size, shader)
 
     def create_sprite_texture_tinted(self, name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
-        return SpriteTexture(self.graphics, self.get_raw(name, wrap=wrap), name, colour, pos, size)
+        return SpriteTexture(self.graphics, self.get_raw(name, wrap=wrap), colour, pos, size, shader)
 
-    def create_sprite_atlas_texture(self, name: str, pos: Coord2d, size: Coord2d):
-        return SpriteAtlasTexture(self.graphics, self.atlas, name, [1.0] * 4, pos, size)
+    def create_sprite_atlas_texture(self, name: str, pos: Coord2d, size: Coord2d, colour = [1.0, 1.0, 1.0, 1.0]):
+        return SpriteAtlasTexture(self.graphics, self.atlas, name, colour, pos, size)
 
-    def debug_draw_atlas(self):
-        self.atlas.draw_debug()
+    def draw_debug_atlas(self):
+        self.atlas.draw_debug_atlas_item(-1, Coord2d(0.0, 0.0), Coord2d(1.0, 1.0))
+
+    def draw_debug_atlas_item(self, item_index: int, pos: Coord2d, size: Coord2d):
+        self.atlas.draw_debug_atlas_item(item_index, pos, size)
 
     def draw_atlas(self):
         self.atlas.draw_final()

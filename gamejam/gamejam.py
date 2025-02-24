@@ -137,6 +137,8 @@ class GameJam:
             self.update(self.dt)
             self.profile.end()
 
+            self.textures.draw_atlas()
+
             self.profile.begin("dev_stats")
             if GameSettings.DEV_MODE or self.gui_editor.mode is not GuiEditMode.NONE:
                 cursor_pos = self.input.cursor.pos

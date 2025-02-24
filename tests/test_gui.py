@@ -15,7 +15,7 @@ class GameWithGui(GameJam):
     def prepare(self):
         super().prepare()
 
-        self.font = Font(os.path.join("gamejam", "res", "consola.ttf"), self.graphics, self.window)
+        self.font = Font(self.graphics, self.window, os.path.join("gamejam", "res", "consola.ttf"))
         test_gui = Gui("test_gui", self.graphics, self.font)
         test_gui.set_active(True, True)
 

@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 import time
 
@@ -11,15 +12,17 @@ class GameWithTextureAtlas(GameJam):
         super(GameWithTextureAtlas, self).__init__()
         self.name = "GameWithTextureAtlas"
 
-
     def prepare(self):
         super().prepare(texture_path="C:\\Projects\\midimaster\\tex\\gui")
 
         test_gui = Gui("test_gui", self.graphics, self.font)
         test_gui.set_active(True, True)
 
-        test_atlas_image = self.textures.create_sprite_atlas_texture("btnback", Coord2d(0.0, 0.0), Coord2d(0.5, 0.5))
+        test_atlas_image = self.textures.create_sprite_atlas_texture("btn_devices", Coord2d(0.0, 0.0), Coord2d(0.15, 0.15))
         test_gui.add_create_widget(test_atlas_image)
+
+        test_atlas_image2 = self.textures.create_sprite_atlas_texture("btn_options", Coord2d(0.66, 0.66), Coord2d(0.15, 0.15))
+        self.anim_widget = test_gui.add_create_widget(test_atlas_image2)
 
         self.gui.add_child(test_gui)
 
@@ -28,7 +31,6 @@ class GameWithTextureAtlas(GameJam):
         game_draw, _ = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
-            self.textures.debug_draw_atlas()
             self.profile.end()
 
     def end(self):

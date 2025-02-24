@@ -196,6 +196,7 @@ class GuiWidget(Widget):
             self.animation = Animation(self.sprite)
 
         anim_prog = self.sprite.graphics.get_program(Shader.ANIM)
+
         if self.sprite.shader != anim_prog:
             self.sprite.bind(anim_prog)
 
