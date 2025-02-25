@@ -11,6 +11,38 @@ uniform vec4 DrawColours[MAX_ATLAS_DRAWS];
 uniform vec2 ItemPositions[MAX_ATLAS_ITEMS];
 uniform vec2 ItemSizes[MAX_ATLAS_ITEMS];
 
+#define BLEND_MAX 1
+#define BLEND_MIN 2
+#define BLEND_ALPHA_G 3
+#define BLEND_ALPHA_GE 4
+#define BLEND_ALPHA_L 5
+#define BLEND_ALPHA_LE 6
+#define BLEND_LAST 7
+#define BLEND_FIRST 8
+
+#define BLEND BLEND_FIRST
+
+vec4 blend(in vec4 a, in vec4 b) {
+    if (BLEND == BLEND_MAX) {
+        return max(a, b);
+    } else if (BLEND == BLEND_MIN) {
+        return min(a, b).a > 0.0 ? min(a, b) : a+b;
+    } else if (BLEND == BLEND_ALPHA_G) {
+        return a.a > b.a ? a : b;
+    }  else if (BLEND == BLEND_ALPHA_GE) {
+        return a.a >= b.a ? a : b;
+    } else if (BLEND == BLEND_ALPHA_L) {
+        return a.a < b.a ? a : b;
+    } else if (BLEND == BLEND_ALPHA_LE) {
+        return a.a <= b.a ? a : b;
+    } else if (BLEND == BLEND_LAST) {
+        return a.a > 0.0 ? a : b;
+    } else if (BLEND == BLEND_FIRST) {
+        return b.a > 0.0 ? b : a;
+    }
+    return a+b;
+}
+
 float drawRect(in vec2 uv, in vec2 center, in vec2 wh)
 {
     vec2 disRec = abs(uv - center) - wh * 0.5;
@@ -20,7 +52,7 @@ float drawRect(in vec2 uv, in vec2 center, in vec2 wh)
 
 void main()
 {
-    outColour = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 gui_col = vec4(0.0, 0.0, 0.0, 0.0);
     vec2 uv = OutTexCoord;
 
     for (int i = 0; i < MAX_ATLAS_DRAWS; ++i)
@@ -53,6 +85,10 @@ void main()
         item_uv += vec2(item_pos.y, item_pos.x);
 
         draw_pos = (draw_pos + 1.0) * 0.5;
-        outColour += drawRect(uv, draw_pos, draw_size) * texture(SamplerTex, item_uv) * draw_col;
+
+        vec4 prev_col = gui_col;
+        gui_col = blend(prev_col, drawRect(uv, draw_pos, draw_size) * texture(SamplerTex, item_uv) * draw_col);
     }
+
+    outColour = gui_col;
 }
