@@ -197,6 +197,8 @@ class TextureAtlas:
     The orignal textures can be accessed and drawn by name."""
     MaxItems = 64
     MaxDraws = 128
+    NoTextureIndex = MaxDraws + 1
+    
     def __init__(self, graphics: Graphics, default_width:int=4096, default_height:int=4096):
         self.graphics = graphics
         self.size = Coord2d(default_width, default_height)
@@ -322,8 +324,12 @@ class TextureAtlas:
                     self._next_largest = size.y
 
     def draw(self, name, pos: Coord2d, size: Coord2d, col: list):
-        draw_item = self.texture_items[name]
-        i = draw_item.index
+        i = -1
+        if name is None:
+            i = TextureAtlas.NoTextureIndex
+        else:
+            draw_item = self.texture_items[name]
+            i = draw_item.index
         n = self.texture_draw_count
         self.draw_index[n] = i
         self.draw_pos[(n * 2)] = pos.x
