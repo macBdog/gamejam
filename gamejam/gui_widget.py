@@ -137,7 +137,13 @@ class GuiWidget(Widget):
 
 
     def has_text(self) -> bool:
-        return len(self.text > 0) and self.font is not None
+        return len(self.text) > 0 and self.font is not None
+
+
+    def set_offset(self, offset: Coord2d):
+        if self.has_text():
+            self._text_dirty = True
+        super().set_offset(offset)
 
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):

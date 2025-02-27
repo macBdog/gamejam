@@ -124,6 +124,7 @@ class GameJam:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
             self.profile.begin("gui")
+            self.textures.draw_atlas()
             if self.gui_editor.mode is not GuiEditMode.NONE:
                 self.gui.draw(self.dt)
                 self.gui_editor.touch(self.input.cursor)
@@ -136,8 +137,6 @@ class GameJam:
             self.profile.begin("game")
             self.update(self.dt)
             self.profile.end()
-
-            self.textures.draw_atlas()
 
             self.profile.begin("dev_stats")
             if GameSettings.DEV_MODE or self.gui_editor.mode is not GuiEditMode.NONE:

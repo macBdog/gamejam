@@ -430,6 +430,10 @@ class TextureManager:
             self.raw_textures[texture_name] = new_texture
             return new_texture
 
+    def create(self, name: str, pos: Coord2d, size: Coord2d, colour = [1.0, 1.0, 1.0, 1.0]):
+        """Create a texture by name from the atlas. This is the most resource-friendly way to draw."""
+        return SpriteAtlasTexture(self.graphics, self.atlas, name, colour, pos, size)
+    
     def create_sprite_shape(self, colour: list, pos: Coord2d, size: Coord2d, shader=None):
         return SpriteShape(self.graphics, colour, pos, size, shader)
 
@@ -438,9 +442,6 @@ class TextureManager:
 
     def create_sprite_texture_tinted(self, name: str, colour: list, pos: Coord2d, size: Coord2d, shader=None, wrap:bool=True):
         return SpriteTexture(self.graphics, self.get_raw(name, wrap=wrap), colour, pos, size, shader)
-
-    def create_sprite_atlas_texture(self, name: str, pos: Coord2d, size: Coord2d, colour = [1.0, 1.0, 1.0, 1.0]):
-        return SpriteAtlasTexture(self.graphics, self.atlas, name, colour, pos, size)
 
     def draw_debug_atlas(self):
         self.atlas.draw_debug_atlas_item(-1, Coord2d(0.0, 0.0), Coord2d(1.0, 1.0))

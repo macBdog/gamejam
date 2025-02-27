@@ -11,6 +11,7 @@ class GameWithTextureAtlas(GameJam):
     def __init__(self):
         super(GameWithTextureAtlas, self).__init__()
         self.name = "GameWithTextureAtlas"
+        self.anim = 0.0
 
     def prepare(self):
         super().prepare(texture_path="C:\\Projects\\midimaster\\tex\\gui")
@@ -18,11 +19,13 @@ class GameWithTextureAtlas(GameJam):
         test_gui = Gui("test_gui", self.graphics, self.font)
         test_gui.set_active(True, True)
 
-        test_atlas_image = self.textures.create_sprite_atlas_texture("btn_devices.png", Coord2d(0.0, 0.0), Coord2d(0.15, 0.15))
+        test_atlas_image = self.textures.create("btn_devices.png", Coord2d(0.0, 0.0), Coord2d(0.15, 0.15))
         test_gui.add_create_widget(test_atlas_image)
 
-        test_atlas_image2 = self.textures.create_sprite_atlas_texture("btn_options.png", Coord2d(0.66, 0.66), Coord2d(0.15, 0.15))
+        test_atlas_image2 = self.textures.create("btn_options.png", Coord2d(0.66, 0.66), Coord2d(0.15, 0.15))
         self.anim_widget = test_gui.add_create_widget(test_atlas_image2)
+
+        self.anim_text = test_gui.add_create_text_widget(self.font, "Moving Text", 12, Coord2d(0.1, 0.1))
 
         self.gui.add_child(test_gui)
 
@@ -31,6 +34,10 @@ class GameWithTextureAtlas(GameJam):
         game_draw, _ = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
+
+            self.anim_text.set_offset(Coord2d(math.sin(self.anim), math.cos(self.anim)))
+            self.anim_widget.set_offset(Coord2d(math.sin(self.anim), math.cos(self.anim)))
+            self.anim += dt
             self.profile.end()
 
     def end(self):

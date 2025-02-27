@@ -1,6 +1,7 @@
 import os
 import time
 
+from gamejam.coord import Coord2d
 from gamejam.font import Font
 from gamejam.gui import Gui
 from gamejam.gamejam import GameJam
