@@ -45,6 +45,11 @@ class Gui(Widget):
         self.active_draw = do_draw
         self.active_input = do_input
 
+        # Disable rendering of text for widgets that are backgrounded
+        for child in self._children:
+            if hasattr(child, "text") and len(child.text) > 0:
+                child.set_disabled(not self.active_input)
+
 
     def add_create_widget(self, sprite:SpriteTexture=None, font:Font=None, name:str="") -> Widget:
         """Add to the list of widgets to draw for this gui collection

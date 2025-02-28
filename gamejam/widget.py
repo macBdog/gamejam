@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 import functools
 from gamejam.coord import Coord2d
-
+from typing import List
 
 class AlignX(Enum):
     Left = 1
@@ -58,9 +58,10 @@ class Widget():
         self.name = f"Widget-{hex(id(self))[6:]}" if not name else name
 
         self._parent = None
-        self._children = []
+        self._children: List[Widget] = []
         self._dirty = True
         self._draw_pos = Coord2d()
+        self._disabled = False
         self._offset = Coord2d()
         self._size = Coord2d(0.1, 0.1)
 
@@ -71,8 +72,23 @@ class Widget():
         self._align_to = Alignment(AlignX.Centre, AlignY.Middle)
 
 
+    def disable(self):
+        self._disabled = True
+
+
+    def enable(self):
+        self._disabled = False
+
+
+    def set_disabled(self, state):
+        self._disabled = state
+
+
     def draw(self, dt: float):
         """Apply any changes to the widget rect."""
+        if self._disabled:
+            return
+
         if self._dirty:
             self._draw_pos = Widget.calc_draw_pos(self._offset, self._size, self._align, self._align_to, self._parent)
             self._dirty = False

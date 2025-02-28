@@ -75,7 +75,7 @@ class GuiWidget(Widget):
                 output["sprite_col"] = widget.sprite.colour
                 output["sprite_stretch"] = widget.sprite_stretch
 
-            if widget.has_text():
+            if widget.has_text:
                 output["text"] = widget.text
                 output["text_col"] = str(widget.text_col)
                 output["text_offset"] = str(widget.text_offset)
@@ -106,10 +106,6 @@ class GuiWidget(Widget):
                 gw.font
 
 
-    def has_sprite(self) -> bool:
-        return self.sprite is not None
-
-
     def set_sprite(self, sprite: SpriteTexture, stretch:bool=False):
         """The widget now controls the sprite's position."""
         self.sprite = sprite
@@ -136,12 +132,13 @@ class GuiWidget(Widget):
         self._text_draw_pos -= Coord2d(0.01, -0.01)
 
 
+    @property
     def has_text(self) -> bool:
         return len(self.text) > 0 and self.font is not None
 
 
     def set_offset(self, offset: Coord2d):
-        if self.has_text():
+        if self.has_text:
             self._text_dirty = True
         super().set_offset(offset)
 
@@ -250,6 +247,9 @@ class GuiWidget(Widget):
 
 
     def draw(self, dt: float):
+        if self._disabled:
+            return
+
         super().draw(dt)
 
         # Apply any active animation
