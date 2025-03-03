@@ -1,7 +1,6 @@
 import os
 from enum import Enum
 from pathlib import Path
-from typing import List
 
 from gamejam.asset_picker import AssetPicker, AssetType
 from gamejam.widget import Alignment, AlignX, AlignY
@@ -110,7 +109,7 @@ class GuiEditor():
 
         # Add a button for each different editor property
         edit_buttons_pos = Coord2d(-0.5, 0.05)
-        self.edit_buttons:List[GuiWidget] = []
+        self.edit_buttons: list[GuiWidget] = []
         for e in GuiEditMode:
             if e != GuiEditMode.NONE and e != GuiEditMode.INSPECT:
                 edit_widget = self.gui.add_create_text_widget(

@@ -5,7 +5,6 @@ import os.path
 from pathlib import Path
 from PIL import Image
 import numpy as np
-from typing import Dict, List
 
 from gamejam.coord import Coord2d
 from gamejam.graphics import Graphics, Shader, ShaderType
@@ -213,7 +212,7 @@ class TextureAtlas:
 
         self.texture_id = glGenTextures(1)
 
-        self.texture_items: Dict[TextureAtlasItem] = {}
+        self.texture_items: dict[TextureAtlasItem] = {}
         self.item_pos = np.zeros(TextureAtlas.MaxDraws * 2, dtype=np.float32)
         self.item_size = np.zeros(TextureAtlas.MaxDraws * 2, dtype=np.float32)
 
