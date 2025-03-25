@@ -73,6 +73,13 @@ class Gui(Widget):
         return widget
 
 
+    def get_widget(self, name:str) -> Widget:
+        for child in self._children:
+            if child.name == name:
+                return child
+        return None
+
+
     def delete_widget(self, widget: Widget):
         if widget in self._children:
             self._children.remove(widget)
