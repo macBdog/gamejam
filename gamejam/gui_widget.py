@@ -33,6 +33,8 @@ class GuiWidget(Widget):
         self.action_kwargs = None
         self.colour_func = None
         self.colour_kwargs = None
+        self.disabled_func = None
+        self.disabled_kwargs = None
         self.actioned = False
         self.alpha_start = 1.0 
         self.alpha_hover = -0.25
@@ -157,16 +159,18 @@ class GuiWidget(Widget):
             else:
                 self.font = font
 
-
     def set_text_colour(self, col: list):
         self.text_col = col
 
-
     def set_colour_func(self, colour_func, colour_kwargs=None):
-        """ Set a function that determines the colour of a gui widget."""
+        """Set a function that determines the colour of a gui widget."""
         self.colour_func = colour_func
         self.colour_kwargs = colour_kwargs
 
+    def set_disabled_func(self, disabled_func, disabled_kwargs=None):
+        """Set a function that determines if a gui widget is disabled."""
+        self.disabled_func = disabled_func
+        self.disabled_kwargs = disabled_kwargs
 
     def set_action(self, activation_func, activation_kwargs):
         """Set the function to call on activate. Leave the hover functions defaulted."""
@@ -174,7 +178,6 @@ class GuiWidget(Widget):
         self.action_kwargs = activation_kwargs
         self.on_hover_begin = self.hover_begin_default
         self.on_hover_end = self.hover_end_default
-
 
     def set_actions(self, activation_func, hover_start_func, hover_end_func, activation_arg):
         """Set the function to call on activate with custom hover start and end functions."""
@@ -247,6 +250,10 @@ class GuiWidget(Widget):
 
 
     def draw(self, dt: float):
+        # Set a user disabled state and early out if disabled
+        if self.disabled_func is not None:
+            self._disabled = self.disabled_func(**self.disabled_kwargs)
+
         if self._disabled:
             return
 
@@ -257,7 +264,7 @@ class GuiWidget(Widget):
             if self.animation.active:
                 self.animation.tick(dt)
             self.animation.draw(dt)
-        
+
         if self.sprite is not None:
             # Apply any colour changes defined by user funcs
             if self.colour_func is not None:
