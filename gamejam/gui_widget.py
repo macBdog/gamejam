@@ -213,6 +213,9 @@ class GuiWidget(Widget):
     def touch(self, mouse: Cursor) -> TouchState:
         """Test for activation and hover states."""
         state = TouchState.Clear
+        if self._disabled:
+            return state
+
         touch_pos = self._draw_pos
         touch_size = self._size
 

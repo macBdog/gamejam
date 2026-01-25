@@ -48,15 +48,14 @@ class Animation:
         self._mag_id = -1       # The magnitude of the effect, a multiplier
         self._frac_id = -1      # The fraction of the effect between 0.0 and 1.0   
 
-
     def reset(self, new_type=None, time=-1.0, mag=1.0):
         self.timer = 0.0
         self.time = 1.0
         self.frac = 0.0
-        self.mag = mag   
+        self.mag = mag
 
         if new_type is not None:
-            self.type.set_bit(new_type.value)   
+            self.type.set_bit(new_type.value)
 
         if self._type_id < 0:
             self._type_id = glGetUniformLocation(self.sprite.shader, "Type")
@@ -64,12 +63,10 @@ class Animation:
             self._frac_id = glGetUniformLocation(self.sprite.shader, "Frac")
             self._display_ratio_id = glGetUniformLocation(self.sprite.shader, "DisplayRatio")
 
-
     def set_animation(self, type:AnimType, clear:bool=False):
         if clear:
             self.type.reset()
         self.type.set_bit(type.value)
-    
 
     def set_action(self, time: float, activation_func, action_kwargs=None):
         """Setup an action to be called at a specific time in the animation.
@@ -78,7 +75,6 @@ class Animation:
         self.action = activation_func
         self.action_kwargs = action_kwargs
         self.action_time = time
-       
 
     def tick(self, dt: float):
         """Update timers and values as per the animation type.
@@ -99,7 +95,7 @@ class Animation:
                         self.active = False
                         self.timer = self.time
 
-                self.frac = self.timer / self.time    
+                self.frac = self.timer / self.time
 
             if self.action is not None:
                 if do_action:

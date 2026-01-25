@@ -18,13 +18,11 @@ class MiniGame(GameJam):
         super(MiniGame, self).__init__()
         self.name = "MiniGame"
         self.reset()
-        
 
     def reset(self, reset_score:bool=True):
         if reset_score:
             self.score = 0
         self.magic_number = np.random.randint(1, 9 + 1)
-
 
     @staticmethod
     def guess_func(**kwargs):
@@ -37,7 +35,6 @@ class MiniGame(GameJam):
             game.score -= 1
             game.particles.spawn(2.0, [game.gui.cursor.pos.x, game.gui.cursor.pos.y], [1.0, 0.1, 0.1, 1.0])
         MiniGame.reset(game, reset_score=False)
-
 
     def prepare(self):
         super().prepare()
@@ -52,7 +49,7 @@ class MiniGame(GameJam):
             idx = i + 1
             anim = AnimType(11 - i)
             widget_pos = Coord2d(-0.65 + (i * 0.3) - ((i // 5) * (5 * 0.3)), 0.25 - ((i // 5) * 0.5))
-            
+
             sprite = SpriteTexture(self.graphics, Texture("", 64, 64), [1.0, 1.0, 1.0, 1.0], Coord2d(), Coord2d(widget_size.x, widget_size.y))
             widget = GuiWidget(name=f"Guess{idx}", font=self.font)
             widget.set_size(widget_size)
@@ -68,13 +65,12 @@ class MiniGame(GameJam):
             self.guess_widgets.append(widget)
 
             self.input.add_key_mapping(48 + i, InputActionKey.ACTION_KEYDOWN, InputActionModifier.NONE, MiniGame.guess_func, {"game": self, "num": i})
-            
+
         if GameSettings.DEV_MODE:
             print("Finished preparing!")
 
-
     def update(self, dt):
-        game_draw, game_input = self.gui.is_active()
+        game_draw, _ = self.gui.is_active()
         if game_draw:
             self.profile.begin("game_loop")
             self.font.draw(f"+", 18, self.gui.cursor.pos, [1.0] * 4)
@@ -89,11 +85,8 @@ class MiniGame(GameJam):
                 self.font.draw(f"X: {math.floor(cursor_pos.x * 100) / 100}\nY: {math.floor(cursor_pos.x * 100) / 100}", 10, cursor_pos, [0.81, 0.81, 0.81, 1.0])
             self.profile.end()
 
-
-
     def end(self):
         super().end()
-
 
 def test_mini_game():
     jam = MiniGame()
@@ -114,7 +107,6 @@ def test_mini_game():
         return True
     
     return False
-
 
 if __name__ == "__main__":
     test_mini_game()
