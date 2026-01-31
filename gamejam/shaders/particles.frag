@@ -10,8 +10,9 @@ uniform float Emitters[NUM_PARTICLE_EMITTERS];
 uniform vec2 EmitterPositions[NUM_PARTICLE_EMITTERS];
 uniform vec3 EmitterColours[NUM_PARTICLE_EMITTERS];
 uniform vec2 EmitterAttractors[NUM_PARTICLE_EMITTERS];
+uniform int EmitterParticleCounts[NUM_PARTICLE_EMITTERS];
 
-#define num_particles 32
+#define num_particles 128
 #define grav -0.01
 #define psize 0.05
 
@@ -60,9 +61,10 @@ void main()
         float life = max(Emitters[e], 0.0);
         vec2 start_pos = game_to_screen(EmitterPositions[e], DisplayRatio);
         vec3 col = EmitterColours[e];
-        for (int i = 0; i < num_particles; ++i)
+        int particle_count = EmitterParticleCounts[e];
+        for (int i = 0; i < particle_count; ++i)
         {
-            float c = (((float(i) / float(num_particles)) + 1.0) * 0.25) + (sin(float(e) / float(NUM_PARTICLE_EMITTERS)));
+            float c = (((float(i) / float(particle_count)) + 1.0) * 0.25) + (sin(float(e) / float(NUM_PARTICLE_EMITTERS)));
             vec2 rdir = noise(vec2(sin(c), cos(c))) * 0.2;
             vec2 pos = getPos(start_pos, 1.0 - life, rdir);
             vec2 apos = game_to_screen(EmitterAttractors[e], DisplayRatio);

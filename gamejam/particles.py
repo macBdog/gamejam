@@ -6,7 +6,7 @@ from gamejam.texture import SpriteTexture, Texture
 from OpenGL.GL import (
     glGetUniformLocation,
     glUniform1f,
-    glUniform1fv,
+    glUniform1fv, glUniform1iv,
     glUniform2fv,
     glUniform3fv
 )
@@ -23,6 +23,7 @@ class Particles:
         self.emitter_positions = [0.0] * Particles.NumEmitters * 2
         self.emitter_colours = [0.0] * Particles.NumEmitters * 3
         self.emitter_attractors = [99.0] * Particles.NumEmitters * 2
+        self.emitter_particle_counts = [32] * Particles.NumEmitters
         
         shader_substitutes = {
             "NUM_PARTICLE_EMITTERS": str(Particles.NumEmitters)
@@ -38,10 +39,20 @@ class Particles:
         self.emitter_positions_id = glGetUniformLocation(self.shader, "EmitterPositions")
         self.emitter_colours_id = glGetUniformLocation(self.shader, "EmitterColours")
         self.emitter_attractors_id = glGetUniformLocation(self.shader, "EmitterAttractors")
+        self.emitter_particle_counts_id = glGetUniformLocation(self.shader, "EmitterParticleCounts")
 
 
-    def spawn(self, speed: float, pos: list, colour: list, life: float = 1.0, attractor_pos: list=None):
-        """Create a bunch of particles at a location to be animated until they die."""
+    def spawn(self, speed: float, pos: list, colour: list, life: float = 1.0, attractor_pos: list=None, num_particles: int = 32):
+        """Create a bunch of particles at a location to be animated until they die.
+
+        Args:
+            speed: Speed at which particle life decays
+            pos: Starting position [x, y] in game coordinates
+            colour: Particle color [r, g, b]
+            life: Initial life value (duration before particles fade)
+            attractor_pos: Optional attractor position [x, y] particles move toward
+            num_particles: Number of particles to spawn (1-128, default 32)
+        """
 
         search = 0
         new_emitter = (self.emitter + 1) % Particles.NumEmitters
@@ -55,10 +66,11 @@ class Particles:
 
         if attractor_pos is None:
             attractor_pos = [99.0, 99.0]
-        
+
         self.emitter = new_emitter
         self.emitters[self.emitter] = life
         self.emitter_speeds[self.emitter] = speed
+        self.emitter_particle_counts[self.emitter] = max(1, min(num_particles, 128))
 
         epos_id = self.emitter * 2
         self.emitter_positions[epos_id] = pos[0]
@@ -71,7 +83,7 @@ class Particles:
 
         self.emitter_attractors[epos_id] = attractor_pos[0]
         self.emitter_attractors[epos_id + 1] = attractor_pos[1]
-            
+
     def draw(self, dt: float):
         """Upload the emitters state to the shader every frame."""
 
@@ -83,6 +95,7 @@ class Particles:
             glUniform2fv(self.emitter_positions_id, Particles.NumEmitters, self.emitter_positions)
             glUniform3fv(self.emitter_colours_id, Particles.NumEmitters, self.emitter_colours)
             glUniform2fv(self.emitter_attractors_id, Particles.NumEmitters, self.emitter_attractors)
+            glUniform1iv(self.emitter_particle_counts_id, Particles.NumEmitters, self.emitter_particle_counts)
 
         self.sprite.draw(particle_uniforms)
 
