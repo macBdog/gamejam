@@ -156,14 +156,12 @@ class GuiEditor():
                         index_in_parent = parent._children.index(gui_children[i])
                         editor.gui_to_edit = parent._children[index_in_parent]
 
-
     @staticmethod
     def toggle_gui_mode(**kwargs):
         editor = kwargs["editor"]        
         editor.mode = GuiEditMode.NONE if editor.mode != GuiEditMode.NONE else GuiEditMode.INSPECT
         if editor.mode and editor.gui_to_edit is None:
             editor.gui_to_edit = editor.main_gui
-
 
     @staticmethod
     def to_file(**kwargs):
@@ -178,7 +176,6 @@ class GuiEditor():
             with open(gui_path / f"{gui.name}.yml", 'w') as stream:
                 gui.dump(stream)
 
-    
     @staticmethod
     def from_file(**kwargs):
         editor = kwargs["editor"]
@@ -188,7 +185,6 @@ class GuiEditor():
             with open(gui_path, 'r') as stream:
                 gui.restore(stream)
 
-
     @staticmethod
     def add_new_widget(**kwargs):
         editor = kwargs["editor"]
@@ -196,7 +192,6 @@ class GuiEditor():
         if editor.mode is not GuiEditMode.NONE:
             editor.deselect()
             gui.add_create_widget()
-
 
     @staticmethod
     def remove_widget(**kwargs):
@@ -207,7 +202,6 @@ class GuiEditor():
                 editor.widget_to_edit = None
                 editor.gui.active_draw = False
                 editor.gui.active_input = False
-
 
     @staticmethod
     def toggle_edit_mode(**kwargs):
@@ -238,7 +232,6 @@ class GuiEditor():
                 editor.mode = GuiEditMode.INSPECT
                 editor.edit_start_pos = None
 
-
     @staticmethod
     def on_commit_widget_text(**kwargs):
         editor = kwargs["editor"]
@@ -250,7 +243,6 @@ class GuiEditor():
         elif mode == GuiEditMode.TEXT:
             widget.set_text(text=text, text_size=10, font=editor.font)
 
-
     @staticmethod
     def show_asset_picker(**kwargs):
         editor = kwargs["editor"]
@@ -258,13 +250,11 @@ class GuiEditor():
             if editor.widget_to_edit is not None and editor.picker.active is False:
                 editor.picker.show(AssetType.TEXTURE, Path(os.getcwd()))
 
-
     def deselect(self):
         self.widget_to_edit = None
         self.mode = GuiEditMode.INSPECT
         self.gui.active_draw = False
         self.gui.active_input = False
-
 
     def _get_align_hover(self, mouse_pos: Coord2d, widget: any) -> int:
         align_hover = -1
@@ -294,7 +284,6 @@ class GuiEditor():
             else:
                 align_hover = -1
         return align_hover
-
 
     def touch(self, mouse: Cursor):
         if self.mode is GuiEditMode.NONE or self.gui_to_edit is None:
@@ -363,7 +352,6 @@ class GuiEditor():
         if mouse.buttons[0] and touched_widget == False:
             self.deselect()
 
-
     def _draw_gui_selection(self, gui: Gui, selection_draw_pos: Coord2d):
         title_draw_colour = [0.7] * 4
         selected_draw_colour = title_draw_colour[:]
@@ -388,7 +376,6 @@ class GuiEditor():
                 if type(child) is Gui:
                     self.font.draw(child.name, 12, selection_draw_pos, selected_draw_colour if child == self.gui_to_edit else title_draw_colour)
                     selection_draw_pos += Coord2d(0.2)
-                
 
     def draw(self, dt: float):
         if self.mode is GuiEditMode.NONE:

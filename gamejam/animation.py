@@ -48,11 +48,12 @@ class Animation:
         self._mag_id = -1       # The magnitude of the effect, a multiplier
         self._frac_id = -1      # The fraction of the effect between 0.0 and 1.0   
 
-    def reset(self, new_type=None, time=-1.0, mag=1.0):
+    def reset(self, new_type=None, time=1.0, mag=1.0):
         self.timer = 0.0
-        self.time = 1.0
+        self.time = time
         self.frac = 0.0
         self.mag = mag
+        self.actioned = False
 
         if new_type is not None:
             self.type.set_bit(new_type.value)
@@ -75,6 +76,7 @@ class Animation:
         self.action = activation_func
         self.action_kwargs = action_kwargs
         self.action_time = time
+        self.actioned = False
 
     def tick(self, dt: float):
         """Update timers and values as per the animation type.
@@ -100,12 +102,11 @@ class Animation:
             if self.action is not None:
                 if do_action:
                     if not self.actioned:
+                        self.actioned = True
                         if self.action_kwargs is None:
                             self.action()
                         else:
                             self.action(**self.action_kwargs)
-                        self.actioned = True
-
 
     def draw(self, dt: float):
         def anim_uniforms():

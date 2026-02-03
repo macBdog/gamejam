@@ -15,7 +15,6 @@ class TouchState(enum.Enum):
     Touching = 2 
     Touched = 3
 
-
 class GuiWidget(Widget):
     """A collection of functionality around the display of a texture for interfaces.
         It owns a reference to a SpriteTexture or SpriteShape for drawing.
@@ -51,16 +50,13 @@ class GuiWidget(Widget):
         self._text_draw_pos = Coord2d()
         self._size_to_text = False
 
-
     def set_size_to_text(self, enabled:bool=True):
         if enabled != self._size_to_text:
             self._dirty = True
         self._size_to_text = enabled
 
-
     @staticmethod
     def serialize(widget: Widget, output):
-
         output[widget.name] = {
             "offset": str(widget._offset),
             "size": str(widget._size),
@@ -70,7 +66,7 @@ class GuiWidget(Widget):
         }
 
         if type(widget) is GuiWidget:
-            if widget.has_sprite():
+            if widget.sprite():
                 if type(widget.sprite) is SpriteTexture:
                     output["sprite_name"] = widget.sprite.name()
 
@@ -89,7 +85,6 @@ class GuiWidget(Widget):
             GuiWidget.serialize(child_widget, child_object)
             output[widget.name]["children"].append(child_object)
 
-
     @staticmethod
     def deserialize(widget: Widget, input):
         if "offset" in input:
@@ -107,7 +102,6 @@ class GuiWidget(Widget):
             if "font" in input:
                 gw.font
 
-
     def set_sprite(self, sprite: SpriteTexture, stretch:bool=False):
         """The widget now controls the sprite's position."""
         self.sprite = sprite
@@ -117,14 +111,12 @@ class GuiWidget(Widget):
             self.sprite.size = self._size
             self.sprite.pos = self._draw_pos
 
-
     def hover_begin_default(self):
         if self.sprite is not None:
             self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
         self.text_col[3] = self.alpha_start + self.alpha_hover
         self._text_draw_pos += Coord2d(0.01, -0.01)
-
 
     def hover_end_default(self):
         if self.sprite is not None:
@@ -133,17 +125,14 @@ class GuiWidget(Widget):
         self.text_col[3] = self.alpha_start
         self._text_draw_pos -= Coord2d(0.01, -0.01)
 
-
     @property
     def has_text(self) -> bool:
         return len(self.text) > 0 and self.font is not None
-
 
     def set_offset(self, offset: Coord2d):
         if self.has_text:
             self._text_dirty = True
         super().set_offset(offset)
-
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):
         self._text_dirty = text != self.text or self.text_size != text_size
@@ -186,7 +175,6 @@ class GuiWidget(Widget):
         self.action = activation_func
         self.action_kwargs = activation_arg
 
-
     def on_hover_begin(self):
         pass
 
@@ -195,7 +183,6 @@ class GuiWidget(Widget):
 
     def on_activate(self):
         pass
-
 
     def animate(self, anim_type: AnimType, time: float=-1.0) -> Animation:
         if self.animation == None:
@@ -208,7 +195,6 @@ class GuiWidget(Widget):
 
         self.animation.reset(anim_type, time)
         return self.animation
-
 
     def touch(self, mouse: Cursor) -> TouchState:
         """Test for activation and hover states."""
@@ -250,7 +236,6 @@ class GuiWidget(Widget):
         if not mouse.buttons[0]:
             self.actioned = False
         return state
-
 
     def draw(self, dt: float):
         # Set a user disabled state and early out if disabled
