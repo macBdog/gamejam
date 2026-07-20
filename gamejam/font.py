@@ -184,6 +184,36 @@ class Font():
         return self.line_height * display_size
 
 
+    def measure(self, string: str, font_size: int) -> Coord2d:
+        """Return the NDC size of a string without drawing it.
+
+        Matches Font.draw metrics: width is the sum of advances, height is at
+        least one line_height (plus extra lines for newlines).
+        """
+        display_size = font_size * 0.0000005
+        line_height = self.line_height * display_size
+        max_width = 0.0
+        line_width = 0.0
+        height = line_height
+
+        for i in range(len(string)):
+            c = ord(string[i])
+
+            if c not in self.sizes:
+                if c == 13 or c == 10:
+                    max_width = max(max_width, line_width)
+                    line_width = 0.0
+                    height += line_height
+                else:
+                    line_width += (self.advance.get(32, 0) * display_size) / self.window_ratio
+                continue
+
+            line_width += (self.advance[c] * display_size) / self.window_ratio
+
+        max_width = max(max_width, line_width)
+        return Coord2d(max_width, height)
+
+
     def draw(self, string: str, font_size: int, pos: Coord2d, colour: list) -> Coord2d:
         """ Draw a string of text with the bottom left of the first glyph at the pos coordinate."""
         shader_font = self.graphics.get_program(Shader.FONT)

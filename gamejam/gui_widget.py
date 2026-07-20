@@ -47,12 +47,15 @@ class GuiWidget(Widget):
 
         self._text_dirty = False
         self._text_dimensions = None
-        self._text_draw_pos = Coord2d()
+        # Pen offset relative to widget center; absolute pos is _draw_pos + this.
+        self._text_local_pos = Coord2d()
         self._size_to_text = False
 
     def set_size_to_text(self, enabled:bool=True):
         if enabled != self._size_to_text:
             self._dirty = True
+            if self.has_text:
+                self._text_dirty = True
         self._size_to_text = enabled
 
     @staticmethod
@@ -116,37 +119,38 @@ class GuiWidget(Widget):
             self.sprite.set_alpha(self.alpha_start + self.alpha_hover)
 
         self.text_col[3] = self.alpha_start + self.alpha_hover
-        self._text_draw_pos += Coord2d(0.01, -0.01)
 
     def hover_end_default(self):
         if self.sprite is not None:
             self.sprite.set_alpha(self.alpha_start)
 
         self.text_col[3] = self.alpha_start
-        self._text_draw_pos -= Coord2d(0.01, -0.01)
 
     @property
     def has_text(self) -> bool:
         return len(self.text) > 0 and self.font is not None
 
-    def set_offset(self, offset: Coord2d):
-        if self.has_text:
+    def set_size(self, size: Coord2d):
+        # Edge-aligned text depends on widget size; centre-aligned only needs
+        # remeasure when size_to_text couples size to the string.
+        if self.has_text and size != self._size:
             self._text_dirty = True
-        super().set_offset(offset)
+        super().set_size(size)
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):
         # Preserve an existing dirty flag so a no-op refresh cannot cancel a
-        # pending first layout (text draw pos starts at origin until computed).
+        # pending first layout (local pen starts at origin until computed).
         if text != self.text or self.text_size != text_size:
             self._text_dirty = True
         self.text = text
         self.text_size = text_size
-        if align is not None:
+        if align is not None and align != self.text_align:
             self.text_align = align
             self._text_dirty = True
         if offset is not None:
+            if offset.x != self.text_offset.x or offset.y != self.text_offset.y:
+                self._text_dirty = True
             self.text_offset = offset
-            self._text_dirty = True
         if self.font is None:
             if font is None:
                 logging.warning("Setting text on a widget without a font!")
@@ -156,6 +160,59 @@ class GuiWidget(Widget):
 
     def set_text_colour(self, col: list):
         self.text_col = col
+
+    def _calc_text_local_pos(self, text_dim: Coord2d) -> Coord2d:
+        """Pen offset from widget center so text_align is honored.
+
+        Font.draw places the first glyph's pen at the given pos (bottom-left of
+        the string). Cached while text layout is clean; absolute position is
+        `_draw_pos + local` so widget motion does not require remeasure.
+        """
+        half_w = self._size.x * 0.5
+        half_h = self._size.y * 0.5
+        center = self.text_offset
+
+        if self.text_align.x == AlignX.Left:
+            anchor_x = center.x - half_w
+        elif self.text_align.x == AlignX.Right:
+            anchor_x = center.x + half_w
+        else:
+            anchor_x = center.x
+
+        if self.text_align.y == AlignY.Top:
+            anchor_y = center.y + half_h
+        elif self.text_align.y == AlignY.Bottom:
+            anchor_y = center.y - half_h
+        else:
+            anchor_y = center.y
+
+        if self.text_align.x == AlignX.Left:
+            draw_x = anchor_x
+        elif self.text_align.x == AlignX.Right:
+            draw_x = anchor_x - text_dim.x
+        else:
+            draw_x = anchor_x - text_dim.x * 0.5
+
+        if self.text_align.y == AlignY.Bottom:
+            draw_y = anchor_y
+        elif self.text_align.y == AlignY.Top:
+            draw_y = anchor_y - text_dim.y
+        else:
+            draw_y = anchor_y - text_dim.y * 0.5
+
+        return Coord2d(draw_x, draw_y)
+
+    def _layout_text(self):
+        """Measure string and cache local pen offset. Only call when dirty."""
+        self._text_dimensions = self.font.measure(self.text, self.text_size)
+        if self._size_to_text and self._size != self._text_dimensions:
+            self.set_size(self._text_dimensions)
+            self._draw_pos = Widget.calc_draw_pos(
+                self._offset, self._size, self._align, self._align_to, self._parent
+            )
+            self._dirty = False
+        self._text_local_pos = self._calc_text_local_pos(self._text_dimensions)
+        self._text_dirty = False
 
     def set_colour_func(self, colour_func, colour_kwargs=None):
         """Set a function that determines the colour of a gui widget."""
@@ -272,14 +329,11 @@ class GuiWidget(Widget):
             self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            layout_dirty = self._text_dirty
-            if self._text_dirty:
-                self._text_dirty = False
-                self._text_draw_pos = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)
+            if self._text_dirty or self._text_dimensions is None:
+                self._layout_text()
 
-            # Layout before draw so the first visible frame uses the correct pos
-            text_dim = self.font.draw(self.text, self.text_size, self._text_draw_pos, self.text_col)
+            text_pos = self._draw_pos + self._text_local_pos
+            if self.hover:
+                text_pos += Coord2d(0.01, -0.01)
 
-            if layout_dirty and self._size_to_text:
-                self._text_dimensions = text_dim
-                self.set_size(self._text_dimensions)
+            self.font.draw(self.text, self.text_size, text_pos, self.text_col)
