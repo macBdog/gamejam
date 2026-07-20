@@ -212,16 +212,24 @@ class Font():
             # Size and position in texture
             tex_coord, tex_size = self.positions[c], self.sizes[c]
 
-            # Size and position of glyph
+            # Convert FreeType 26.6 metrics into NDC. Horizontal values must all
+            # share the same window_ratio scale so bearing, glyph width, and
+            # advance stay consistent — otherwise narrow glyphs (i, l) are
+            # centered with an unscaled half-width and jam into neighbours.
             offset = self.offsets[c]
-            bearing = ((self.bearings[c][0] * display_size) / self.window_ratio, self.bearings[c][1] * display_size)
-            char_size = (offset[0] * display_size, offset[1] * display_size)
-            char_pos = (draw_pos.x + bearing[0] + (char_size[0] * 0.5), draw_pos.y + bearing[1] - (char_size[1] * 0.5))
+            char_size_x = (offset[0] * display_size) / self.window_ratio
+            char_size_y = offset[1] * display_size
+            bearing_x = (self.bearings[c][0] * display_size) / self.window_ratio
+            bearing_y = self.bearings[c][1] * display_size
+            char_pos = (
+                draw_pos.x + bearing_x + char_size_x * 0.5,
+                draw_pos.y + bearing_y - char_size_y * 0.5,
+            )
 
             glUniform4f(self.colour_id, colour[0], colour[1], colour[2], colour[3])
             glUniform2f(self.pos_id, char_pos[0], char_pos[1])
-            glUniform2f(self.size_id, char_size[0] / self.window_ratio, char_size[1]) 
-            glUniform2f(self.char_coord_id, tex_coord[0], tex_coord[1]) 
+            glUniform2f(self.size_id, char_size_x, char_size_y)
+            glUniform2f(self.char_coord_id, tex_coord[0], tex_coord[1])
             glUniform2f(self.char_size_id, tex_size[0], tex_size[1])
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
 
