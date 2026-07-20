@@ -135,18 +135,24 @@ class GuiWidget(Widget):
         super().set_offset(offset)
 
     def set_text(self, text: str, text_size:int, offset:Coord2d=None, align:Alignment=None, font:Font=None):
-        self._text_dirty = text != self.text or self.text_size != text_size
+        # Preserve an existing dirty flag so a no-op refresh cannot cancel a
+        # pending first layout (text draw pos starts at origin until computed).
+        if text != self.text or self.text_size != text_size:
+            self._text_dirty = True
         self.text = text
         self.text_size = text_size
         if align is not None:
             self.text_align = align
+            self._text_dirty = True
         if offset is not None:
             self.text_offset = offset
+            self._text_dirty = True
         if self.font is None:
             if font is None:
                 logging.warning("Setting text on a widget without a font!")
             else:
                 self.font = font
+                self._text_dirty = True
 
     def set_text_colour(self, col: list):
         self.text_col = col
@@ -266,12 +272,14 @@ class GuiWidget(Widget):
             self.sprite.draw()
 
         if len(self.text) > 0 and self.font is not None:
-            text_dim = self.font.draw(self.text, self.text_size, self._text_draw_pos, self.text_col)
-
+            layout_dirty = self._text_dirty
             if self._text_dirty:
                 self._text_dirty = False
                 self._text_draw_pos = Widget.calc_draw_pos(self.text_offset, self._size, self.text_align, Alignment(x=AlignX.Centre, y=AlignY.Middle), self)
 
-                if self._size_to_text:
-                    self._text_dimensions = text_dim
-                    self.set_size(self._text_dimensions)
+            # Layout before draw so the first visible frame uses the correct pos
+            text_dim = self.font.draw(self.text, self.text_size, self._text_draw_pos, self.text_col)
+
+            if layout_dirty and self._size_to_text:
+                self._text_dimensions = text_dim
+                self.set_size(self._text_dimensions)
