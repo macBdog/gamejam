@@ -327,6 +327,6 @@ class GuiWidget(Widget):
 
             text_pos = self._draw_pos + self._text_local_pos
             if self.hover:
-                text_pos += Coord2d(0.01, -0.01)
+                text_pos += Coord2d(0.005, -0.005)
 
             self.font.draw(self.text, self.text_size, text_pos, self.text_col)
