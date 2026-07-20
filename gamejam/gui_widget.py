@@ -165,40 +165,33 @@ class GuiWidget(Widget):
         """Pen offset from widget center so text_align is honored.
 
         Font.draw places the first glyph's pen at the given pos (bottom-left of
-        the string). Cached while text layout is clean; absolute position is
+        the string). `text_offset` is the alignment anchor relative to the widget
+        center. Cached while text layout is clean; absolute position is
         `_draw_pos + local` so widget motion does not require remeasure.
+
+        - Left:   pen at anchor (string grows right) — labels, titles beside icons
+        - Centre: pen at anchor - half measured size — button captions stay centered
+        - Right:  pen at anchor - measured width
+        - Middle Y: baseline shifted down by half measured height so the glyph
+          box is optically centered (Font pen is the baseline; without this
+          shift, text sits high in bars/buttons).
         """
-        half_w = self._size.x * 0.5
-        half_h = self._size.y * 0.5
-        center = self.text_offset
+        ax = self.text_offset.x
+        ay = self.text_offset.y
 
         if self.text_align.x == AlignX.Left:
-            anchor_x = center.x - half_w
+            draw_x = ax
         elif self.text_align.x == AlignX.Right:
-            anchor_x = center.x + half_w
+            draw_x = ax - text_dim.x
         else:
-            anchor_x = center.x
+            draw_x = ax - text_dim.x * 0.5
 
         if self.text_align.y == AlignY.Top:
-            anchor_y = center.y + half_h
+            draw_y = ay - text_dim.y
         elif self.text_align.y == AlignY.Bottom:
-            anchor_y = center.y - half_h
+            draw_y = ay
         else:
-            anchor_y = center.y
-
-        if self.text_align.x == AlignX.Left:
-            draw_x = anchor_x
-        elif self.text_align.x == AlignX.Right:
-            draw_x = anchor_x - text_dim.x
-        else:
-            draw_x = anchor_x - text_dim.x * 0.5
-
-        if self.text_align.y == AlignY.Bottom:
-            draw_y = anchor_y
-        elif self.text_align.y == AlignY.Top:
-            draw_y = anchor_y - text_dim.y
-        else:
-            draw_y = anchor_y - text_dim.y * 0.5
+            draw_y = ay - text_dim.y * 0.5
 
         return Coord2d(draw_x, draw_y)
 

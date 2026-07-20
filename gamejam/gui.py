@@ -8,7 +8,7 @@ from gamejam.cursor import Cursor
 from gamejam.font import Font
 from gamejam.graphics import Graphics
 from gamejam.texture import SpriteTexture
-from gamejam.widget import Widget
+from gamejam.widget import Widget, Alignment, AlignX, AlignY
 from gamejam.gui_widget import GuiWidget, TouchState
 
 
@@ -60,8 +60,14 @@ class Gui(Widget):
         return widget
 
     def add_create_text_widget(self, font:Font, text:str, size:int, offset:Coord2d=None, name:str="") -> GuiWidget:
+        """Create a text label. Left-aligned so `offset` is the pen start (grows right).
+
+        Buttons keep the default Centre text align and measure-based centering.
+        """
         widget = GuiWidget(name=name, font=font)
-        widget.set_size(Coord2d(0.25, font.get_line_display_height(size)))
+        # Zero width: Left align puts the pen at the widget center (the offset).
+        widget.set_size(Coord2d(0.0, font.get_line_display_height(size)))
+        widget.text_align = Alignment(AlignX.Left, AlignY.Middle)
         if offset is not None:
             widget.set_offset(offset)
         widget.set_text(text, size, Coord2d())
