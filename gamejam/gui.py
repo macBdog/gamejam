@@ -36,10 +36,8 @@ class Gui(Widget):
 
         self.set_size(Coord2d(2.0, 2.0))
 
-
     def is_active(self):
         return self.active_draw, self.active_input
-
 
     def set_active(self, do_draw: bool, do_input: bool):
         self.active_draw = do_draw
@@ -49,7 +47,6 @@ class Gui(Widget):
         for child in self._children:
             if hasattr(child, "text") and len(child.text) > 0:
                 child.set_disabled(not self.active_input)
-
 
     def add_create_widget(self, sprite:SpriteTexture=None, font:Font=None, name:str="") -> Widget:
         """Add to the list of widgets to draw for this gui collection
@@ -62,7 +59,6 @@ class Gui(Widget):
         self.add_child(widget)
         return widget
 
-
     def add_create_text_widget(self, font:Font, text:str, size:int, offset:Coord2d=None, name:str="") -> GuiWidget:
         widget = GuiWidget(name=name, font=font)
         widget.set_size(Coord2d(0.25, font.get_line_display_height(size)))
@@ -72,25 +68,21 @@ class Gui(Widget):
         self.add_child(widget)
         return widget
 
-
     def get_widget(self, name:str) -> Widget:
         for child in self._children:
             if child.name == name:
                 return child
         return None
 
-
     def delete_widget(self, widget: Widget):
         if widget in self._children:
             self._children.remove(widget)
-
 
     def dump(self, stream):
         """Write hierachy to a yaml file, called by Gui editor"""
         output = {}
         GuiWidget.serialize(self, output)
         yaml.dump(output, stream, sort_keys=False, default_flow_style=False)
-
 
     def restore(self, stream):
         """Load config from a file and set internal state"""
@@ -107,7 +99,6 @@ class Gui(Widget):
         else:
             logging.error(f"Widget load error! Trying to restore a widget named {self.name} from a stream called {stream.name}")
 
-
     def touch(self, mouse: Cursor) -> TouchState:
         state = TouchState.Clear
         if self.cursor is None:
@@ -121,7 +112,6 @@ class Gui(Widget):
                         state = this_touch
 
         return state
-
 
     def draw(self, dt: float):
         if self.active_draw:
